@@ -31,191 +31,411 @@ function initializeApp() {
     // 設置班別管理
     setupShiftManager();
     
-    // 渲染日曆
-    calendarService.renderCalendar();
-    
-    // 渲染員工列表
-    renderEmployeeList();
+    // 設置排班管理
+    setupScheduleManager();
     
     // 更新統計資料
     updateStats();
-    
-    console.log('Initialization complete.');
 }
 
-// 年月選擇器設置
+// 設置年月選擇器
 function setupYearMonthSelectors() {
-    const yearSelector = document.getElementById('yearSelector');
-    const monthSelector = document.getElementById('monthSelector');
+    const yearSelect = document.getElementById('yearSelect');
+    const monthSelect = document.getElementById('monthSelect');
     
-    if (!yearSelector || !monthSelector) {
+    if (!yearSelect || !monthSelect) {
         console.error('Year or month selector not found');
         return;
     }
-
-    console.log('Setting up year/month selectors...');
+    
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear();
     
     // 設置年份選項
-    const currentYear = new Date().getFullYear();
     for (let year = currentYear - 5; year <= currentYear + 5; year++) {
         const option = document.createElement('option');
         option.value = year;
-        option.textContent = year;
-        if (year === currentYear) option.selected = true;
-        yearSelector.appendChild(option);
+        option.textContent = `${year}年`;
+        yearSelect.appendChild(option);
     }
+    yearSelect.value = currentYear;
     
     // 設置月份選項
     for (let month = 1; month <= 12; month++) {
         const option = document.createElement('option');
         option.value = month;
-        option.textContent = month;
-        if (month === new Date().getMonth() + 1) option.selected = true;
-        monthSelector.appendChild(option);
+        option.textContent = `${month}月`;
+        monthSelect.appendChild(option);
     }
+    monthSelect.value = currentDate.getMonth() + 1;
     
     // 添加事件監聽器
-    yearSelector.addEventListener('change', () => {
-        calendarService.updateCalendar(parseInt(yearSelector.value), parseInt(monthSelector.value));
+    yearSelect.addEventListener('change', () => {
+        calendarService.currentYear = parseInt(yearSelect.value);
+        calendarService.renderCalendar();
     });
     
-    monthSelector.addEventListener('change', () => {
-        calendarService.updateCalendar(parseInt(yearSelector.value), parseInt(monthSelector.value));
+    monthSelect.addEventListener('change', () => {
+        calendarService.currentMonth = parseInt(monthSelect.value);
+        calendarService.renderCalendar();
     });
-
-    console.log('Year/month selectors setup complete');
+    
+    // 初始更新日曆
+    calendarService.renderCalendar();
 }
 
 // 設置員工管理
 function setupEmployeeManager() {
     console.log('Setting up employee manager...');
     
-    const employeeManagerBtn = document.getElementById('employeeManagerBtn');
-    const employeeManagerDialog = document.getElementById('employeeManagerDialog');
-    const addEmployeeDialog = document.getElementById('addEmployeeDialog');
-    const addEmployeeBtn = document.getElementById('addEmployeeBtn');
-    const addEmployeeForm = document.getElementById('addEmployeeForm');
-    
-    if (!employeeManagerBtn || !employeeManagerDialog || !addEmployeeDialog || !addEmployeeBtn || !addEmployeeForm) {
-        console.error('Employee manager elements not found');
-        return;
+    // 渲染員工列表
+    function renderEmployeeList() {
+        console.log('Rendering employee list...');
+        const employeeList = document.getElementById('employeeList');
+        const employees = scheduleService.getEmployees();
+        
+        employeeList.innerHTML = employees.map(employee => `
+            <div class="employee-item">
+                <div class="employee-info">
+                    <span>${employee.name}</span>
+                    <span>${employee.position}</span>
+                </div>
+                <div class="employee-actions">
+                    <button onclick="editEmployee('${employee.id}')" class="btn btn-small">編輯</button>
+                    <button onclick="deleteEmployee('${employee.id}')" class="btn btn-small btn-danger">刪除</button>
+                </div>
+            </div>
+        `).join('');
     }
     
-    // 打開員工管理對話框
-    employeeManagerBtn.addEventListener('click', () => {
-        console.log('Opening employee manager dialog');
-        renderEmployeeManagerList();
-        dialogService.openDialog(employeeManagerDialog);
-    });
+    // 設置員工管理按鈕事件
+    const employeeSettingsBtn = document.getElementById('employeeSettingsBtn');
+    if (employeeSettingsBtn) {
+        employeeSettingsBtn.addEventListener('click', () => {
+            const dialog = document.getElementById('employeeDialog');
+            if (dialog) {
+                renderEmployeeList();
+                dialogService.openDialog(dialog);
+            } else {
+                console.error('Employee dialog not found');
+            }
+        });
+    }
     
-    // 打開新增員工對話框
-    addEmployeeBtn.addEventListener('click', () => {
-        addEmployeeForm.reset();
-        delete addEmployeeForm.dataset.editingId;
-        dialogService.closeDialog(employeeManagerDialog);
-        dialogService.openDialog(addEmployeeDialog);
-    });
+    // 設置新增員工按鈕事件
+    const addEmployeeBtn = document.getElementById('addEmployeeBtn');
+    if (addEmployeeBtn) {
+        addEmployeeBtn.addEventListener('click', () => {
+            const form = document.getElementById('employeeForm');
+            if (form) {
+                form.reset();
+                form.elements['employeeId'].value = '';
+                
+                const formTitle = document.querySelector('#employeeDialog h2');
+                if (formTitle) {
+                    formTitle.textContent = '新增員工';
+                }
+            }
+        });
+    }
     
-    // 處理新增員工表單提交
-    addEmployeeForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const formData = new FormData(addEmployeeForm);
-        const employee = {
-            name: formData.get('name'),
-            position: formData.get('position'),
-            hourlyRate: formData.get('hourlyRate')
-        };
-        
-        const editingId = addEmployeeForm.dataset.editingId;
-        if (editingId) {
-            // 編輯現有員工
-            employee.id = parseInt(editingId);
-            scheduleService.updateEmployee(employee);
-        } else {
-            // 新增員工
-            scheduleService.addEmployee(employee);
+    // 設置員工表單提交事件
+    const employeeForm = document.getElementById('employeeForm');
+    if (employeeForm) {
+        employeeForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(employeeForm);
+            const employee = {
+                name: formData.get('name'),
+                position: formData.get('position'),
+                hourlyRate: parseFloat(formData.get('hourlyRate'))
+            };
+            
+            const employeeId = formData.get('employeeId');
+            if (employeeId) {
+                // 更新現有員工
+                employee.id = employeeId;
+                scheduleService.updateEmployee(employee);
+            } else {
+                // 添加新員工
+                scheduleService.addEmployee(employee);
+            }
+            
+            employeeForm.reset();
+            renderEmployeeList();
+            dialogService.closeDialog(employeeDialog);
+            calendarService.renderCalendar();
+        });
+    }
+    
+    // 定義全局編輯員工函數
+    window.editEmployee = (employeeId) => {
+        const employee = scheduleService.getEmployeeById(employeeId);
+        if (employee) {
+            const form = document.getElementById('employeeForm');
+            form.elements['employeeId'].value = employee.id;
+            form.elements['name'].value = employee.name;
+            form.elements['position'].value = employee.position;
+            form.elements['hourlyRate'].value = employee.hourlyRate;
+            
+            const formTitle = document.querySelector('#employeeDialog h2');
+            if (formTitle) {
+                formTitle.textContent = '編輯員工';
+            }
         }
-        
-        addEmployeeForm.reset();
-        delete addEmployeeForm.dataset.editingId;
-        dialogService.closeDialog(addEmployeeDialog);
-        dialogService.openDialog(employeeManagerDialog);
-        renderEmployeeManagerList();
-        renderEmployeeList();
-        calendarService.renderCalendar(); // 更新日曆顯示
-    });
-
-    console.log('Employee manager setup complete');
+    };
+    
+    // 定義全局刪除員工函數
+    window.deleteEmployee = (employeeId) => {
+        if (confirm('確定要刪除這個員工嗎？')) {
+            scheduleService.removeEmployee(employeeId);
+            renderEmployeeList();
+            calendarService.renderCalendar();
+        }
+    };
+    
+    // 初始渲染
+    renderEmployeeList();
 }
 
 // 設置班別管理
 function setupShiftManager() {
     console.log('Setting up shift manager...');
     
-    const shiftSettingsBtn = document.getElementById('shiftSettingsBtn');
-    const shiftSettingsDialog = document.getElementById('shiftSettingsDialog');
-    const editShiftDialog = document.getElementById('editShiftDialog');
-    const addShiftBtn = document.getElementById('addShiftBtn');
-    const editShiftForm = document.getElementById('editShiftForm');
-    const saveShiftSettingsBtn = document.getElementById('saveShiftSettingsBtn');
-    
-    if (!shiftSettingsBtn || !shiftSettingsDialog || !editShiftDialog || !addShiftBtn || !editShiftForm || !saveShiftSettingsBtn) {
-        console.error('Shift manager elements not found');
-        return;
+    // 渲染班別列表
+    function renderShiftList() {
+        const shiftList = document.getElementById('shiftList');
+        const shifts = scheduleService.getShifts();
+        
+        shiftList.innerHTML = Object.entries(shifts).map(([name, shift]) => `
+            <div class="shift-item" style="border-left: 4px solid ${shift.color}">
+                <div class="shift-info">
+                    <span class="shift-name">${name}</span>
+                    <span class="shift-time">
+                        ${shift.isFullDay ? '整天' : `${shift.startTime} - ${shift.endTime}`}
+                    </span>
+                </div>
+                <div class="shift-actions">
+                    <button onclick="editShift('${name}')" class="btn btn-small">編輯</button>
+                    <button onclick="deleteShift('${name}')" class="btn btn-small btn-danger">刪除</button>
+                </div>
+            </div>
+        `).join('');
     }
     
-    // 打開班別設定對話框
-    shiftSettingsBtn.addEventListener('click', () => {
-        console.log('Opening shift settings dialog');
-        renderShiftList();
-        renderWeeklySettings();
-        dialogService.openDialog(shiftSettingsDialog);
-    });
+    // 渲染每週預設班別設定
+    function renderWeeklySettings() {
+        const container = document.getElementById('weeklySettingsContainer');
+        const shifts = scheduleService.getShifts();
+        const weeklyDefaults = scheduleService.getWeeklyDefaults();
+        const days = [
+            { key: 'sunday', label: '星期日' },
+            { key: 'monday', label: '星期一' },
+            { key: 'tuesday', label: '星期二' },
+            { key: 'wednesday', label: '星期三' },
+            { key: 'thursday', label: '星期四' },
+            { key: 'friday', label: '星期五' },
+            { key: 'saturday', label: '星期六' }
+        ];
+        
+        container.innerHTML = days.map(day => `
+            <div class="weekly-setting">
+                <h4>${day.label}</h4>
+                <div class="shift-options">
+                    ${Object.entries(shifts).map(([shiftName, shift]) => `
+                        <label class="shift-option">
+                            <input type="checkbox" 
+                                   value="${shiftName}" 
+                                   ${weeklyDefaults[day.key]?.includes(shiftName) ? 'checked' : ''}
+                                   onchange="updateWeeklyDefault('${day.key}', '${shiftName}', this.checked)">
+                            <span style="background-color: ${shift.color}">
+                                ${shiftName}
+                            </span>
+                        </label>
+                    `).join('')}
+                </div>
+            </div>
+        `).join('');
+    }
     
-    // 添加新班別
-    addShiftBtn.addEventListener('click', () => {
-        editShiftForm.reset();
-        dialogService.closeDialog(shiftSettingsDialog);
-        dialogService.openDialog(editShiftDialog);
-    });
+    // 設置整天選項
+    const isFullDayCheckbox = document.getElementById('isFullDay');
+    const timeGroup = document.getElementById('timeGroup');
+    
+    if (isFullDayCheckbox && timeGroup) {
+        isFullDayCheckbox.addEventListener('change', function() {
+            timeGroup.style.display = this.checked ? 'none' : 'grid';
+            const timeInputs = timeGroup.querySelectorAll('input[type="time"]');
+            timeInputs.forEach(input => {
+                input.required = !this.checked;
+            });
+        });
+    }
+    
+    // 處理顏色預設值
+    const colorPresets = document.querySelectorAll('.color-preset');
+    const colorInput = document.getElementById('shiftColor');
+    
+    if (colorInput) {
+        colorPresets.forEach(preset => {
+            preset.addEventListener('click', () => {
+                const color = preset.dataset.color;
+                if (color) {
+                    colorInput.value = color;
+                }
+            });
+        });
+    }
     
     // 處理班別表單提交
-    editShiftForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const formData = new FormData(editShiftForm);
-        const shift = {
-            name: formData.get('name'),
-            startTime: formData.get('startTime'),
-            endTime: formData.get('endTime'),
-            color: formData.get('color')
-        };
-        
-        scheduleService.addShift(shift);
-        editShiftForm.reset();
-        dialogService.closeDialog(editShiftDialog);
-        dialogService.openDialog(shiftSettingsDialog);
-        renderShiftList();
-    });
+    const editShiftForm = document.getElementById('editShiftForm');
+    if (editShiftForm) {
+        editShiftForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            
+            const formData = new FormData(this);
+            const shiftData = {
+                name: formData.get('name'),
+                color: formData.get('color'),
+                isFullDay: formData.get('isFullDay') === 'on'
+            };
+            
+            if (!shiftData.isFullDay) {
+                shiftData.startTime = formData.get('startTime');
+                shiftData.endTime = formData.get('endTime');
+            }
+            
+            const originalName = formData.get('originalName');
+            if (originalName) {
+                // 刪除原有班別
+                scheduleService.removeShift(originalName);
+            }
+            
+            // 添加新班別
+            scheduleService.addShift(shiftData.name, shiftData);
+            
+            // 更新界面
+            renderShiftList();
+            renderWeeklySettings();
+            calendarService.renderCalendar();
+            
+            // 關閉對話框
+            dialogService.closeDialog(editShiftDialog);
+        });
+    }
     
-    // 保存每週預設設定
-    saveShiftSettingsBtn.addEventListener('click', () => {
-        const weeklySettings = {};
-        const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    // 設置班別設定按鈕事件
+    const shiftSettingsBtn = document.getElementById('shiftSettingsBtn');
+    if (shiftSettingsBtn) {
+        shiftSettingsBtn.addEventListener('click', () => {
+            renderShiftList();
+            renderWeeklySettings();
+            dialogService.openDialog(shiftSettingsDialog);
+        });
+    }
+    
+    // 定義全局更新每週預設函數
+    window.updateWeeklyDefault = (day, shiftName, checked) => {
+        const weeklyDefaults = scheduleService.getWeeklyDefaults();
+        weeklyDefaults[day] = weeklyDefaults[day] || [];
         
-        days.forEach(day => {
-            const dayElement = document.getElementById(`weekly-${day}`);
-            if (dayElement) {
-                const shifts = Array.from(dayElement.querySelectorAll('input[type="checkbox"]:checked'))
-                    .map(checkbox => checkbox.value);
-                weeklySettings[day] = shifts;
+        if (checked && !weeklyDefaults[day].includes(shiftName)) {
+            weeklyDefaults[day].push(shiftName);
+        } else if (!checked) {
+            weeklyDefaults[day] = weeklyDefaults[day].filter(s => s !== shiftName);
+        }
+        
+        scheduleService.updateWeeklyDefaults(weeklyDefaults);
+        calendarService.renderCalendar();
+    };
+    
+    // 定義全局編輯班別函數
+    window.editShift = (shiftName) => {
+        const shift = scheduleService.getShiftByName(shiftName);
+        if (shift) {
+            const form = document.getElementById('editShiftForm');
+            form.elements['originalName'].value = shiftName;
+            form.elements['name'].value = shiftName;
+            form.elements['color'].value = shift.color;
+            form.elements['isFullDay'].checked = shift.isFullDay;
+            
+            if (!shift.isFullDay) {
+                form.elements['startTime'].value = shift.startTime;
+                form.elements['endTime'].value = shift.endTime;
+            }
+            
+            document.getElementById('timeGroup').style.display = shift.isFullDay ? 'none' : 'grid';
+            
+            const formTitle = document.querySelector('#editShiftDialog h2');
+            if (formTitle) {
+                formTitle.textContent = '編輯班別';
+            }
+            
+            dialogService.openDialog(editShiftDialog);
+        }
+    };
+    
+    // 定義全局刪除班別函數
+    window.deleteShift = (shiftName) => {
+        if (confirm('確定要刪除這個班別嗎？')) {
+            scheduleService.removeShift(shiftName);
+            renderShiftList();
+            renderWeeklySettings();
+            calendarService.renderCalendar();
+        }
+    };
+    
+    // 添加新增班別按鈕事件
+    const addShiftBtn = document.getElementById('addShiftBtn');
+    if (addShiftBtn) {
+        addShiftBtn.addEventListener('click', () => {
+            const form = document.getElementById('editShiftForm');
+            if (form) {
+                form.reset();
+                form.elements['originalName'].value = '';
+                
+                const formTitle = document.querySelector('#editShiftDialog h2');
+                if (formTitle) {
+                    formTitle.textContent = '新增班別';
+                }
+                
+                document.getElementById('timeGroup').style.display = 'grid';
+                dialogService.openDialog(editShiftDialog);
             }
         });
-        
-        scheduleService.setWeeklyDefaults(weeklySettings);
-        dialogService.closeDialog(shiftSettingsDialog);
-    });
-
+    }
+    
+    // 初始渲染
+    renderShiftList();
+    renderWeeklySettings();
+    
     console.log('Shift manager setup complete');
+}
+
+// 更新統計資料
+function updateStats() {
+    const employeeCount = document.getElementById('employeeCount');
+    const shiftCount = document.getElementById('shiftCount');
+    const scheduleCount = document.getElementById('scheduleCount');
+    
+    if (employeeCount) {
+        employeeCount.textContent = scheduleService.getEmployees().length;
+    }
+    
+    if (shiftCount) {
+        shiftCount.textContent = Object.keys(scheduleService.getShifts()).length;
+    }
+    
+    if (scheduleCount) {
+        scheduleCount.textContent = '0'; // TODO: 實現排班計數
+    }
+}
+
+// 設置排班管理
+function setupScheduleManager() {
+    console.log('Setting up schedule manager...');
+    // TODO: 實現排班管理功能
 }
 
 // 處理排班點擊事件
@@ -293,151 +513,101 @@ calendarService.updateCellSchedules = function(cell, date) {
     }).join('');
 }
 
-// 渲染員工列表
-function renderEmployeeList() {
-    console.log('Rendering employee list...');
+// 更新日曆
+function updateCalendar() {
+    const year = parseInt(document.getElementById('yearSelect').value);
+    const month = parseInt(document.getElementById('monthSelect').value);
+    const calendarBody = document.getElementById('calendarBody');
     
-    const employeeList = document.getElementById('employeeList');
-    if (!employeeList) {
-        console.error('Employee list element not found');
-        return;
+    if (!calendarBody) return;
+    
+    const firstDay = new Date(year, month - 1, 1);
+    const lastDay = new Date(year, month, 0);
+    const startDay = firstDay.getDay();
+    const totalDays = lastDay.getDate();
+    
+    let html = '';
+    let currentRow = '';
+    let currentDay = 1;
+    
+    // 填充日曆前面的空白
+    for (let i = 0; i < startDay; i++) {
+        currentRow += '<td class="calendar-cell empty"></td>';
     }
     
-    const employees = scheduleService.getEmployees();
-    employeeList.innerHTML = employees.map(employee => `
-        <div class="employee-item">
-            <span>${employee.name}</span>
-            <button class="btn-delete" onclick="window.removeEmployee(${employee.id})">×</button>
-        </div>
-    `).join('');
-}
-
-// 渲染員工管理列表
-function renderEmployeeManagerList() {
-    console.log('Rendering employee manager list...');
-    
-    const employeeManagerList = document.getElementById('employeeManagerList');
-    if (!employeeManagerList) {
-        console.error('Employee manager list element not found');
-        return;
-    }
-    
-    const employees = scheduleService.getEmployees();
-    employeeManagerList.innerHTML = employees.map(employee => `
-        <tr>
-            <td>${employee.name}</td>
-            <td>${employee.position}</td>
-            <td>${employee.hourlyRate}</td>
-            <td>
-                <button class="btn-edit" onclick="window.editEmployee(${employee.id})">編輯</button>
-                <button class="btn-delete" onclick="window.removeEmployee(${employee.id})">刪除</button>
+    // 填充日期
+    while (currentDay <= totalDays) {
+        if ((startDay + currentDay - 1) % 7 === 0) {
+            html += '<tr>' + currentRow;
+            currentRow = '';
+        }
+        
+        const date = `${year}-${String(month).padStart(2, '0')}-${String(currentDay).padStart(2, '0')}`;
+        const schedules = scheduleService.getDaySchedules(date);
+        
+        currentRow += `
+            <td class="calendar-cell" data-date="${date}">
+                <div class="calendar-date">${currentDay}</div>
+                <div class="calendar-schedules">
+                    ${schedules.map(schedule => {
+                        const shift = scheduleService.getShiftByName(schedule.shiftName);
+                        if (!shift) return '';
+                        return `
+                            <div class="schedule-item ${schedule.isDefault ? 'default' : ''}"
+                                 style="background-color: ${shift.color}">
+                                ${schedule.shiftName}
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+                <button class="add-schedule-btn" onclick="openScheduleDialog('${date}')">+</button>
             </td>
-        </tr>
-    `).join('');
-}
-
-// 編輯員工
-window.editEmployee = function(employeeId) {
-    const employee = scheduleService.getEmployeeById(employeeId);
-    if (!employee) return;
-
-    const addEmployeeForm = document.getElementById('addEmployeeForm');
-    const addEmployeeDialog = document.getElementById('addEmployeeDialog');
-    const employeeManagerDialog = document.getElementById('employeeManagerDialog');
-
-    // 填充表單
-    addEmployeeForm.querySelector('[name="name"]').value = employee.name;
-    addEmployeeForm.querySelector('[name="position"]').value = employee.position;
-    addEmployeeForm.querySelector('[name="hourlyRate"]').value = employee.hourlyRate;
-
-    // 暫存員工ID
-    addEmployeeForm.dataset.editingId = employeeId;
-
-    // 切換對話框
-    dialogService.closeDialog(employeeManagerDialog);
-    dialogService.openDialog(addEmployeeDialog);
-}
-
-// 渲染班別列表
-function renderShiftList() {
-    console.log('Rendering shift list...');
-    
-    const shiftList = document.getElementById('shiftList');
-    if (!shiftList) {
-        console.error('Shift list element not found');
-        return;
+        `;
+        
+        if ((startDay + currentDay) % 7 === 0) {
+            html += currentRow + '</tr>';
+            currentRow = '';
+        }
+        
+        currentDay++;
     }
     
-    const shifts = scheduleService.getShifts();
-    shiftList.innerHTML = Object.entries(shifts).map(([name, shift]) => `
-        <tr>
-            <td>${name}</td>
-            <td>${shift.startTime}</td>
-            <td>${shift.endTime}</td>
-            <td style="background-color: ${shift.color}">${shift.color}</td>
-            <td>
-                <button class="btn-delete" onclick="window.removeShift('${name}')">刪除</button>
-            </td>
-        </tr>
-    `).join('');
-}
-
-// 渲染每週預設設定
-function renderWeeklySettings() {
-    console.log('Rendering weekly settings...');
-    
-    const weeklySettingsContainer = document.getElementById('weeklySettingsContainer');
-    if (!weeklySettingsContainer) {
-        console.error('Weekly settings container not found');
-        return;
+    // 填充日曆後面的空白
+    const remainingCells = 7 - ((startDay + totalDays) % 7);
+    if (remainingCells < 7) {
+        for (let i = 0; i < remainingCells; i++) {
+            currentRow += '<td class="calendar-cell empty"></td>';
+        }
+        html += currentRow + '</tr>';
     }
     
-    const dayNames = {
-        'sunday': '週日',
-        'monday': '週一',
-        'tuesday': '週二',
-        'wednesday': '週三',
-        'thursday': '週四',
-        'friday': '週五',
-        'saturday': '週六'
-    };
-    
-    const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-    const shifts = scheduleService.getShifts();
-    const weeklyDefaults = scheduleService.getWeeklyDefaults();
-    
-    weeklySettingsContainer.innerHTML = days.map(day => `
-        <div class="weekly-setting" id="weekly-${day}">
-            <h3>${dayNames[day]}</h3>
-            <div class="shift-checkboxes">
-                ${Object.entries(shifts).map(([shiftName, shift]) => `
-                    <label style="border-left: 3px solid ${shift.color}">
-                        <input type="checkbox" value="${shiftName}"
-                            ${weeklyDefaults[day]?.includes(shiftName) ? 'checked' : ''}>
-                        ${shiftName}
-                    </label>
-                `).join('')}
-            </div>
-        </div>
-    `).join('');
+    calendarBody.innerHTML = html;
 }
 
-// 更新統計資料
+// 統計功能
 function updateStats() {
-    console.log('Updating stats...');
-    
-    const statsContainer = document.getElementById('statsContainer');
-    if (!statsContainer) {
-        console.error('Stats container not found');
-        return;
+    try {
+        const totalEmployees = document.getElementById('totalEmployees');
+        const totalShifts = document.getElementById('totalShifts');
+        const totalSchedules = document.getElementById('totalSchedules');
+        
+        if (!totalEmployees || !totalShifts || !totalSchedules) {
+            console.error('統計元素未找到');
+            return;
+        }
+        
+        const stats = {
+            employees: scheduleService.getEmployees().length,
+            shifts: Object.keys(scheduleService.getShifts()).length,
+            schedules: Object.values(scheduleService.schedules || {}).reduce((total, daySchedules) => total + (daySchedules?.length || 0), 0)
+        };
+        
+        totalEmployees.textContent = stats.employees;
+        totalShifts.textContent = stats.shifts;
+        totalSchedules.textContent = stats.schedules;
+    } catch (error) {
+        console.error('更新統計資料失敗:', error);
     }
-    
-    const stats = scheduleService.calculateStats();
-    statsContainer.innerHTML = `
-        <div>總排班數：${stats.totalShifts}</div>
-        <div>總工時：${stats.totalHours}</div>
-        <div>總薪資：${stats.totalSalary}</div>
-    `;
 }
 
 // 全局函數定義
@@ -445,16 +615,6 @@ window.removeEmployee = function(employeeId) {
     if (confirm('確定要刪除該員工嗎？')) {
         scheduleService.removeEmployee(employeeId);
         renderEmployeeList();
-        renderEmployeeManagerList();
-        calendarService.renderCalendar();
-        updateStats();
-    }
-}
-
-window.removeShift = function(shiftName) {
-    if (confirm('確定要刪除該班別嗎？')) {
-        scheduleService.removeShift(shiftName);
-        renderShiftList();
         calendarService.renderCalendar();
         updateStats();
     }

@@ -7,18 +7,36 @@
 </head>
 <body>
     <div class="container">
-        <div class="header">
+        <header>
             <h1>排班管理系統</h1>
-            <div class="controls">
-                <select id="yearSelector"></select>
-                <select id="monthSelector"></select>
-                <button id="employeeManagerBtn">管理員工</button>
-                <button id="shiftSettingsBtn">班別設定</button>
+            <div class="toolbar">
+                <button id="employeeBtn" class="btn">員工管理</button>
+                <button id="shiftSettingsBtn" class="btn">班別設定</button>
+                <button id="exportBtn" class="btn">匯出排班表</button>
+            </div>
+        </header>
+
+        <div class="stats-container">
+            <div class="stat-item">
+                <span class="stat-label">員工總數：</span>
+                <span id="totalEmployees">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">班別總數：</span>
+                <span id="totalShifts">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">排班總數：</span>
+                <span id="totalSchedules">0</span>
             </div>
         </div>
 
         <div class="calendar-container">
-            <table id="calendar">
+            <div class="calendar-header">
+                <select id="yearSelect"></select>
+                <select id="monthSelect"></select>
+            </div>
+            <table class="calendar">
                 <thead>
                     <tr>
                         <th>日</th>
@@ -33,131 +51,172 @@
                 <tbody id="calendarBody"></tbody>
             </table>
         </div>
-
-        <div id="statsContainer" class="stats-container"></div>
     </div>
 
     <!-- 對話框 -->
     <div class="dialog-overlay hidden"></div>
 
     <!-- 排班對話框 -->
-    <div id="scheduleDialog" class="dialog hidden">
-        <div class="dialog-header">
-            <h2>排班設定</h2>
-            <button class="close-dialog">×</button>
-        </div>
-        <div class="dialog-content">
-            <div class="date-display">日期：<span id="selectedDate"></span></div>
-            <select id="employeeSelector"></select>
-            <textarea id="scheduleNotes" placeholder="備註"></textarea>
-            <div id="currentSchedules" class="current-schedules"></div>
-            <div class="shift-buttons"></div>
-        </div>
-    </div>
-
-    <!-- 員工管理對話框 -->
-    <div id="employeeManagerDialog" class="dialog hidden">
-        <div class="dialog-header">
-            <h2>員工管理</h2>
-            <button class="close-dialog">×</button>
-        </div>
-        <div class="dialog-content">
-            <button id="addEmployeeBtn">新增員工</button>
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>姓名</th>
-                        <th>職位</th>
-                        <th>時薪</th>
-                        <th>操作</th>
-                    </tr>
-                </thead>
-                <tbody id="employeeManagerList"></tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- 新增員工對話框 -->
-    <div id="addEmployeeDialog" class="dialog hidden">
-        <div class="dialog-header">
-            <h2>新增員工</h2>
-            <button class="close-dialog">×</button>
-        </div>
-        <div class="dialog-content">
-            <form id="addEmployeeForm">
-                <div class="form-group">
-                    <label>姓名：</label>
-                    <input type="text" name="name" required>
-                </div>
-                <div class="form-group">
-                    <label>職位：</label>
-                    <input type="text" name="position" required>
-                </div>
-                <div class="form-group">
-                    <label>時薪：</label>
-                    <input type="number" name="hourlyRate" min="0" step="1" required>
-                </div>
-                <button type="submit">新增</button>
-            </form>
-        </div>
-    </div>
-
-    <!-- 班別設定對話框 -->
-    <div id="shiftSettingsDialog" class="dialog hidden">
-        <div class="dialog-header">
-            <h2>班別設定</h2>
-            <button class="close-dialog">×</button>
-        </div>
-        <div class="dialog-content">
-            <button id="addShiftBtn">新增班別</button>
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>名稱</th>
-                        <th>開始時間</th>
-                        <th>結束時間</th>
-                        <th>顏色</th>
-                        <th>操作</th>
-                    </tr>
-                </thead>
-                <tbody id="shiftList"></tbody>
-            </table>
-            <div class="weekly-settings">
-                <h3>每週預設班別</h3>
-                <div id="weeklySettingsContainer"></div>
-                <button id="saveShiftSettingsBtn">保存設定</button>
+    <dialog id="scheduleDialog" class="modal">
+        <div class="modal-content">
+            <h2></h2>
+            <div class="schedule-list-container">
+                <div id="scheduleList"></div>
+                <button id="addScheduleBtn" class="btn btn-primary">新增排班</button>
+            </div>
+            <div class="button-group">
+                <button type="button" class="btn" onclick="dialogService.closeDialog(scheduleDialog)">關閉</button>
             </div>
         </div>
-    </div>
+    </dialog>
 
-    <!-- 編輯班別對話框 -->
-    <div id="editShiftDialog" class="dialog hidden">
-        <div class="dialog-header">
-            <h2>編輯班別</h2>
-            <button class="close-dialog">×</button>
-        </div>
-        <div class="dialog-content">
-            <form id="editShiftForm">
+    <!-- 排班編輯對話框 -->
+    <dialog id="editScheduleDialog" class="modal">
+        <div class="modal-content">
+            <h2>新增排班</h2>
+            <form id="editScheduleForm">
                 <div class="form-group">
-                    <label>名稱：</label>
-                    <input type="text" name="name" required>
+                    <label for="scheduleEmployee">員工</label>
+                    <select id="scheduleEmployee" name="employeeId" required>
+                    </select>
                 </div>
                 <div class="form-group">
-                    <label>開始時間：</label>
-                    <input type="time" name="startTime" required>
+                    <label for="scheduleShift">班別</label>
+                    <select id="scheduleShift" name="shiftId" required>
+                    </select>
                 </div>
-                <div class="form-group">
-                    <label>結束時間：</label>
-                    <input type="time" name="endTime" required>
+                <div class="button-group">
+                    <button type="submit" class="btn btn-primary">保存</button>
+                    <button type="button" class="btn" onclick="dialogService.closeDialog(editScheduleDialog)">取消</button>
                 </div>
-                <div class="form-group">
-                    <label>顏色：</label>
-                    <input type="color" name="color" required>
-                </div>
-                <button type="submit">保存</button>
             </form>
         </div>
-    </div>
+    </dialog>
+
+    <!-- 員工管理對話框 -->
+    <dialog id="employeeDialog" class="modal">
+        <div class="modal-content">
+            <h2>新增員工</h2>
+            <div class="dialog-body">
+                <div class="employee-list-section">
+                    <button id="addEmployeeBtn" class="btn btn-primary">新增員工</button>
+                    <div id="employeeList" class="employee-list"></div>
+                </div>
+                <form id="employeeForm" class="employee-form">
+                    <input type="hidden" name="employeeId">
+                    <div class="form-group">
+                        <label for="name">姓名</label>
+                        <input type="text" id="name" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="position">職位</label>
+                        <input type="text" id="position" name="position" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="hourlyRate">時薪</label>
+                        <input type="number" id="hourlyRate" name="hourlyRate" step="0.1" required>
+                    </div>
+                    <div class="button-group">
+                        <button type="submit" class="btn btn-primary">保存</button>
+                        <button type="button" class="btn" onclick="dialogService.closeDialog(employeeDialog)">取消</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </dialog>
+
+    <!-- 員工編輯對話框 -->
+    <dialog id="editEmployeeDialog" class="modal">
+        <div class="modal-content">
+            <h2>新增員工</h2>
+            <form id="editEmployeeForm">
+                <div class="form-group">
+                    <label for="employeeName">姓名</label>
+                    <input type="text" id="employeeName" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="employeePosition">職位</label>
+                    <input type="text" id="employeePosition" name="position" required>
+                </div>
+                <div class="form-group">
+                    <label for="employeeHourlyRate">時薪</label>
+                    <input type="number" id="employeeHourlyRate" name="hourlyRate" step="0.1" required>
+                </div>
+                <div class="button-group">
+                    <button type="submit" class="btn btn-primary">保存</button>
+                    <button type="button" class="btn" onclick="dialogService.closeDialog(editEmployeeDialog)">取消</button>
+                </div>
+            </form>
+        </div>
+    </dialog>
+
+    <!-- 班別編輯對話框 -->
+    <dialog id="editShiftDialog" class="modal">
+        <div class="modal-content">
+            <h2>新增班別</h2>
+            <form id="editShiftForm" class="shift-form">
+                <input type="hidden" name="originalName">
+                <div class="form-group">
+                    <label for="shiftName">班別名稱</label>
+                    <input type="text" id="shiftName" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="isFullDay" name="isFullDay">
+                        整天
+                    </label>
+                </div>
+                <div class="form-group time-group" id="timeGroup">
+                    <div>
+                        <label for="startTime">開始時間</label>
+                        <input type="time" id="startTime" name="startTime">
+                    </div>
+                    <div>
+                        <label for="endTime">結束時間</label>
+                        <input type="time" id="endTime" name="endTime">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="shiftColor">顏色</label>
+                    <div class="color-picker">
+                        <input type="color" id="shiftColor" name="color" required value="#db524c">
+                        <div class="color-presets">
+                            <button type="button" class="color-preset" data-color="#db524c" style="background-color: #db524c"></button>
+                            <button type="button" class="color-preset" data-color="#ff9a26" style="background-color: #ff9a26"></button>
+                            <button type="button" class="color-preset" data-color="#faecfd" style="background-color: #faecfd"></button>
+                            <button type="button" class="color-preset" data-color="#336647" style="background-color: #336647"></button>
+                            <button type="button" class="color-preset" data-color="#1c3d28" style="background-color: #1c3d28"></button>
+                        </div>
+                    </div>
+                </div>
+                <div class="button-group">
+                    <button type="submit" class="btn btn-primary">保存</button>
+                    <button type="button" class="btn" onclick="dialogService.closeDialog(editShiftDialog)">取消</button>
+                </div>
+            </form>
+        </div>
+    </dialog>
+
+    <!-- 班別設定對話框 -->
+    <dialog id="shiftSettingsDialog" class="modal">
+        <div class="modal-content">
+            <h2>班別設定</h2>
+            <div class="shift-settings-container">
+                <div class="shift-list-section">
+                    <h3>班別列表</h3>
+                    <button id="addShiftBtn" class="btn btn-primary">新增班別</button>
+                    <div id="shiftList" class="shift-list"></div>
+                </div>
+                <div class="weekly-defaults-section">
+                    <h3>每週預設班別</h3>
+                    <div id="weeklySettingsContainer"></div>
+                </div>
+            </div>
+            <div class="button-group">
+                <button type="button" class="btn" onclick="dialogService.closeDialog(shiftSettingsDialog)">關閉</button>
+            </div>
+        </div>
+    </dialog>
 
     <script src="renderer.js"></script>
 </body>

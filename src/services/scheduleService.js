@@ -1,17 +1,5 @@
 class ScheduleService {
     constructor() {
-        this.employees = [];
-        this.shifts = {};
-        this.schedules = {};
-        this.weeklyDefaults = {
-            monday: [],
-            tuesday: [],
-            wednesday: [],
-            thursday: [],
-            friday: [],
-            saturday: [],
-            sunday: []
-        };
         console.log('Initializing ScheduleService...');
         this.loadData();
         console.log('ScheduleService initialized successfully');
@@ -19,251 +7,166 @@ class ScheduleService {
 
     loadData() {
         try {
-            const fs = require('fs');
-            const path = require('path');
-            const dataPath = path.join(__dirname, '../data/schedule-data.json');
-
-            if (fs.existsSync(dataPath)) {
-                const data = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
-                this.employees = data.employees || [];
-                this.shifts = data.shifts || {};
-                this.schedules = data.schedules || {};
-                this.weeklyDefaults = data.weeklyDefaults || {
-                    monday: [],
-                    tuesday: [],
-                    wednesday: [],
-                    thursday: [],
-                    friday: [],
-                    saturday: [],
-                    sunday: []
-                };
-            }
+            // 從 localStorage 加載數據
+            this.employees = JSON.parse(localStorage.getItem('employees')) || [];
+            this.shifts = JSON.parse(localStorage.getItem('shifts')) || {};
+            this.weeklyDefaults = JSON.parse(localStorage.getItem('weeklyDefaults')) || {
+                sunday: [],
+                monday: [],
+                tuesday: [],
+                wednesday: [],
+                thursday: [],
+                friday: [],
+                saturday: []
+            };
+            this.schedules = JSON.parse(localStorage.getItem('schedules')) || {};
         } catch (error) {
             console.error('Error loading data:', error);
+            // 如果加載失敗，使用默認值
+            this.employees = [];
+            this.shifts = {};
+            this.weeklyDefaults = {
+                sunday: [],
+                monday: [],
+                tuesday: [],
+                wednesday: [],
+                thursday: [],
+                friday: [],
+                saturday: []
+            };
+            this.schedules = {};
         }
     }
 
     saveData() {
         try {
-            const fs = require('fs');
-            const path = require('path');
-            const dataPath = path.join(__dirname, '../data/schedule-data.json');
-            const dataDir = path.dirname(dataPath);
-
-            if (!fs.existsSync(dataDir)) {
-                fs.mkdirSync(dataDir, { recursive: true });
-            }
-
-            const data = {
-                employees: this.employees,
-                shifts: this.shifts,
-                schedules: this.schedules,
-                weeklyDefaults: this.weeklyDefaults
-            };
-
-            fs.writeFileSync(dataPath, JSON.stringify(data, null, 2));
+            localStorage.setItem('employees', JSON.stringify(this.employees));
+            localStorage.setItem('shifts', JSON.stringify(this.shifts));
+            localStorage.setItem('weeklyDefaults', JSON.stringify(this.weeklyDefaults));
+            localStorage.setItem('schedules', JSON.stringify(this.schedules));
             console.log('Data saved successfully');
         } catch (error) {
             console.error('Error saving data:', error);
         }
     }
 
-    // 員工管理
+    // 員工相關方法
     addEmployee(employee) {
-        try {
-            const newEmployee = {
-                ...employee,
-                id: Date.now()
-            };
-            this.employees.push(newEmployee);
-            this.saveData();
-            return newEmployee;
-        } catch (error) {
-            console.error('Error adding employee:', error);
-            throw error;
+        if (!employee.id) {
+            employee.id = Date.now().toString();
         }
-    }
-
-    removeEmployee(employeeId) {
-        try {
-            this.employees = this.employees.filter(e => e.id !== employeeId);
-            // 同時移除該員工的所有排班
-            Object.keys(this.schedules).forEach(date => {
-                this.schedules[date] = this.schedules[date].filter(s => s.employeeId !== employeeId);
-            });
-            this.saveData();
-        } catch (error) {
-            console.error('Error removing employee:', error);
-            throw error;
-        }
-    }
-
-    getEmployeeById(id) {
-        return this.employees.find(emp => emp.id === id);
-    }
-
-    updateEmployee(employee) {
-        const index = this.employees.findIndex(emp => emp.id === employee.id);
-        if (index !== -1) {
-            this.employees[index] = { ...this.employees[index], ...employee };
-            this.saveData();
-        }
+        this.employees.push(employee);
+        this.saveData();
+        return employee;
     }
 
     getEmployees() {
-        return [...this.employees];
+        return this.employees;
     }
 
-    // 班別管理
-    addShift(shift) {
-        try {
-            this.shifts[shift.name] = {
-                startTime: shift.startTime,
-                endTime: shift.endTime,
-                color: shift.color
-            };
-            this.saveData();
-        } catch (error) {
-            console.error('Error adding shift:', error);
-            throw error;
-        }
+    getEmployeeById(id) {
+        return this.employees.find(e => e.id === id);
     }
 
-    removeShift(shiftName) {
-        try {
-            delete this.shifts[shiftName];
-            // 同時移除該班別的所有排班和預設設定
-            Object.keys(this.schedules).forEach(date => {
-                this.schedules[date] = this.schedules[date].filter(s => s.shiftName !== shiftName);
-            });
-            Object.keys(this.weeklyDefaults).forEach(day => {
-                this.weeklyDefaults[day] = this.weeklyDefaults[day].filter(s => s !== shiftName);
-            });
-            this.saveData();
-        } catch (error) {
-            console.error('Error removing shift:', error);
-            throw error;
-        }
+    removeEmployee(id) {
+        this.employees = this.employees.filter(e => e.id !== id);
+        // 同時移除該員工的所有排班
+        Object.keys(this.schedules).forEach(date => {
+            this.schedules[date] = this.schedules[date].filter(s => s.employeeId !== id);
+            if (this.schedules[date].length === 0) {
+                delete this.schedules[date];
+            }
+        });
+        this.saveData();
+    }
+
+    // 班別相關方法
+    addShift(name, shift) {
+        this.shifts[name] = shift;
+        this.saveData();
     }
 
     getShifts() {
-        return { ...this.shifts };
+        return this.shifts;
     }
 
-    // 每週預設班別管理
-    setWeeklyDefaults(defaults) {
-        try {
-            this.weeklyDefaults = { ...defaults };
-            this.saveData();
-            console.log('Weekly defaults updated:', this.weeklyDefaults);
-        } catch (error) {
-            console.error('Error setting weekly defaults:', error);
-            throw error;
-        }
+    getShiftByName(name) {
+        return this.shifts[name];
+    }
+
+    removeShift(name) {
+        delete this.shifts[name];
+        // 同時移除該班別的所有排班
+        Object.keys(this.schedules).forEach(date => {
+            this.schedules[date] = this.schedules[date].filter(s => s.shiftName !== name);
+            if (this.schedules[date].length === 0) {
+                delete this.schedules[date];
+            }
+        });
+        // 從每週預設中移除該班別
+        Object.keys(this.weeklyDefaults).forEach(day => {
+            this.weeklyDefaults[day] = this.weeklyDefaults[day].filter(s => s !== name);
+        });
+        this.saveData();
+    }
+
+    // 每週預設班別相關方法
+    updateWeeklyDefaults(weeklyDefaults) {
+        this.weeklyDefaults = weeklyDefaults;
+        this.saveData();
+        console.log('Weekly defaults updated:', weeklyDefaults);
     }
 
     getWeeklyDefaults() {
-        return { ...this.weeklyDefaults };
+        return this.weeklyDefaults;
     }
 
-    // 排班管理
-    addSchedule(date, employeeId, shiftName) {
-        try {
-            if (!this.schedules[date]) {
-                this.schedules[date] = [];
-            }
-            this.schedules[date].push({ employeeId, shiftName });
-            this.saveData();
-        } catch (error) {
-            console.error('Error adding schedule:', error);
-            throw error;
+    // 排班相關方法
+    addSchedule(date, schedule) {
+        if (!this.schedules[date]) {
+            this.schedules[date] = [];
         }
+        // 檢查是否已存在相同員工在同一天的排班
+        const existingSchedule = this.schedules[date].find(s => s.employeeId === schedule.employeeId);
+        if (existingSchedule) {
+            throw new Error('該員工在此日期已有排班');
+        }
+        this.schedules[date].push(schedule);
+        this.saveData();
     }
 
-    removeDaySchedule(date, employeeId) {
-        try {
-            if (this.schedules[date]) {
-                this.schedules[date] = this.schedules[date].filter(s => s.employeeId !== employeeId);
-                this.saveData();
+    removeSchedule(date, scheduleId) {
+        if (this.schedules[date]) {
+            this.schedules[date] = this.schedules[date].filter(s => s.id !== scheduleId);
+            if (this.schedules[date].length === 0) {
+                delete this.schedules[date];
             }
-        } catch (error) {
-            console.error('Error removing schedule:', error);
-            throw error;
+            this.saveData();
         }
     }
 
     getDaySchedules(date) {
-        try {
-            const actualSchedules = this.schedules[date] || [];
-            if (actualSchedules.length > 0) {
-                return actualSchedules.map(schedule => ({
-                    ...schedule,
-                    isDefault: false
-                }));
-            }
-
-            // 如果沒有實際排班，返回預設班別
-            const dayOfWeek = new Date(date).getDay();
-            const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-            const defaultShifts = this.weeklyDefaults[days[dayOfWeek]] || [];
-            
-            return defaultShifts.map(shiftName => ({
+        const schedules = this.schedules[date] || [];
+        const defaultSchedules = this.getDefaultSchedules(date);
+        
+        // 合併實際排班和預設班別
+        return [
+            ...schedules,
+            ...defaultSchedules.map(shiftName => ({
+                id: `default-${shiftName}`,
                 shiftName,
                 isDefault: true
-            }));
-        } catch (error) {
-            console.error('Error getting day schedules:', error);
-            return [];
-        }
+            }))
+        ];
     }
 
-    getMonthSchedule(year, month) {
-        const result = {};
-        const startDate = new Date(year, month - 1, 1);
-        const endDate = new Date(year, month, 0);
-
-        for (let d = startDate; d <= endDate; d.setDate(d.getDate() + 1)) {
-            const dateStr = d.toISOString().split('T')[0];
-            result[dateStr] = this.getDaySchedules(dateStr);
-        }
-
-        return result;
-    }
-
-    // 統計功能
-    calculateStats() {
-        const stats = {
-            totalShifts: 0,
-            totalHours: 0,
-            totalSalary: 0
-        };
-
-        Object.values(this.schedules).forEach(daySchedules => {
-            daySchedules.forEach(schedule => {
-                const employee = this.employees.find(e => e.id === schedule.employeeId);
-                const shift = this.shifts[schedule.shiftName];
-                
-                if (employee && shift) {
-                    stats.totalShifts++;
-                    
-                    const startTime = new Date(`2000-01-01T${shift.startTime}`);
-                    const endTime = new Date(`2000-01-01T${shift.endTime}`);
-                    let hours = (endTime - startTime) / (1000 * 60 * 60);
-                    
-                    if (hours < 0) {
-                        hours += 24;
-                    }
-                    
-                    stats.totalHours += hours;
-                    stats.totalSalary += hours * employee.hourlyRate;
-                }
-            });
-        });
-
-        return stats;
+    // 獲取指定日期的預設班別
+    getDefaultSchedules(date) {
+        const dayOfWeek = new Date(date).getDay();
+        const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+        return this.weeklyDefaults[days[dayOfWeek]] || [];
     }
 }
 
-// 創建並導出排班服務實例
 const scheduleService = new ScheduleService();
 module.exports = scheduleService;

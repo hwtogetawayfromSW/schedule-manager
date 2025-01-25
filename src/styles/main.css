@@ -64,72 +64,374 @@ body {
 
 .calendar-cell {
     position: relative;
-    min-height: 100%;
+    min-height: 100px;
+    padding: 8px;
+    border: 1px solid #dee2e6;
+    background: white;
 }
 
-.date-number {
+.calendar-date {
     font-weight: bold;
-    margin-bottom: 5px;
+    margin-bottom: 8px;
 }
 
-.schedule-container {
-    font-size: 0.9em;
+.calendar-schedules {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
 }
 
 .schedule-item {
-    margin: 2px 0;
-    padding: 4px 6px;
-    border-radius: 3px;
-    font-size: 0.85em;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
+.schedule-item.default {
+    opacity: 0.7;
+}
+
+.add-schedule-btn {
+    position: absolute;
+    bottom: 4px;
+    right: 4px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.calendar-schedules:hover .add-schedule-btn {
+    opacity: 1;
+}
+
+.add-schedule-btn:hover {
+    background-color: #0056b3;
+}
+
 /* 對話框樣式 */
+dialog {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 0;
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    width: 80%;
+    max-width: 800px;
+    max-height: 90vh;
+    overflow: auto;
+    background: white;
+}
+
+@media (max-width: 768px) {
+    dialog {
+        width: 95%;
+        max-height: 95vh;
+    }
+}
+
 .dialog-overlay {
+    display: none;
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
     background-color: rgba(0, 0, 0, 0.5);
-    z-index: 1000;
+    z-index: 999;
 }
 
-.dialog {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background-color: white;
+dialog::backdrop {
+    background-color: transparent;
+}
+
+.modal-content {
+    padding: 20px;
+    background: white;
+    border-radius: 8px;
+}
+
+/* 員工和班別管理樣式 */
+.dialog-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+@media (max-width: 768px) {
+    .dialog-body {
+        grid-template-columns: 1fr;
+    }
+}
+
+.employee-list-section {
+    background: #f8f9fa;
     padding: 20px;
     border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    z-index: 1001;
-    min-width: 300px;
-    max-width: 90%;
-    max-height: 90vh;
+    border: 1px solid #e9ecef;
+}
+
+.employee-list {
+    margin-top: 15px;
+    max-height: 400px;
     overflow-y: auto;
 }
 
-.dialog-header {
+.employee-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    padding: 10px;
+    margin-bottom: 8px;
+    background: white;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.employee-info {
+    display: flex;
+    gap: 15px;
+}
+
+.employee-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.shift-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    margin-bottom: 8px;
+    background: white;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.shift-info {
+    display: flex;
+    gap: 15px;
+}
+
+.shift-name {
+    font-weight: bold;
+}
+
+.shift-time {
+    color: #6c757d;
+}
+
+.shift-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.employee-form,
+.shift-form {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+}
+
+.form-group {
     margin-bottom: 15px;
 }
 
-.close-dialog {
-    background: none;
-    border: none;
-    font-size: 24px;
-    cursor: pointer;
-    padding: 0 5px;
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    color: #495057;
 }
 
-.dialog-content {
+.form-group input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+}
+
+.btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    background: #e9ecef;
+    color: #495057;
+    transition: all 0.2s;
+}
+
+.btn:hover {
+    background: #dee2e6;
+}
+
+.btn-primary {
+    background: #007bff;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #0056b3;
+}
+
+.btn-danger {
+    background: #dc3545;
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #c82333;
+}
+
+.btn-small {
+    padding: 4px 8px;
+    font-size: 0.9em;
+}
+
+.button-group {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 20px;
+}
+
+.weekly-setting {
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.weekly-setting h4 {
+    margin: 0 0 10px 0;
+    color: #495057;
+}
+
+.shift-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.shift-option {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.shift-option span {
+    padding: 2px 8px;
+    border-radius: 4px;
+    color: white;
+    font-size: 0.9em;
+}
+
+/* 班別設定對話框樣式 */
+.shift-settings-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+@media (max-width: 768px) {
+    .shift-settings-container {
+        grid-template-columns: 1fr;
+    }
+}
+
+.shift-list-section,
+.weekly-defaults-section {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+}
+
+.shift-list-section h3,
+.weekly-defaults-section h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #495057;
+}
+
+.shift-list {
     margin-top: 15px;
+}
+
+/* 班別編輯表單樣式 */
+.time-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.color-picker {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.color-presets {
+    display: flex;
+    gap: 8px;
+}
+
+.color-preset {
+    width: 24px;
+    height: 24px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.color-preset:hover {
+    transform: scale(1.1);
+}
+
+/* 每週預設班別樣式 */
+.weekly-setting {
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.weekly-setting h4 {
+    margin: 0 0 10px 0;
+    color: #495057;
+}
+
+.shift-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.shift-option {
+    display: flex;
+    align-items: center;
+    gap: 4px;
 }
 
 /* 表單樣式 */
@@ -224,6 +526,24 @@ button:hover {
     margin: 20px 0;
 }
 
+@media (max-width: 1200px) {
+    #weeklySettingsContainer {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    #weeklySettingsContainer {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    #weeklySettingsContainer {
+        grid-template-columns: 1fr;
+    }
+}
+
 .weekly-setting {
     background: white;
     padding: 15px;
@@ -276,4 +596,117 @@ button:hover {
 
 #saveShiftSettingsBtn:hover {
     background-color: #218838;
+}
+
+/* 班別列表樣式 */
+.shift-list-container {
+    margin-bottom: 20px;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0;
+}
+
+.data-table th,
+.data-table td {
+    padding: 8px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.data-table th {
+    background-color: #f5f5f5;
+}
+
+.color-box {
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    display: inline-block;
+}
+
+/* 每週預設班別樣式 */
+.weekly-settings-container {
+    margin: 20px 0;
+}
+
+.weekly-setting {
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.weekly-setting h4 {
+    margin: 0 0 10px 0;
+    color: #333;
+}
+
+.shift-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.shift-option label {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.shift-option label:hover {
+    opacity: 0.8;
+}
+
+.shift-option input[type="checkbox"] {
+    margin-right: 6px;
+}
+
+/* 預設顏色選擇器樣式 */
+.color-presets {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.color-presets button {
+    width: 30px;
+    height: 30px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.color-presets button:hover {
+    transform: scale(1.1);
+}
+
+/* 排班對話框樣式 */
+.schedule-list-container {
+    margin-bottom: 20px;
+}
+
+.shift-color {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
+#scheduleDialog .modal-content {
+    min-width: 500px;
+}
+
+@media (max-width: 768px) {
+    #scheduleDialog .modal-content {
+        min-width: auto;
+    }
 }

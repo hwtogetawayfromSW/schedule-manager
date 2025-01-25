@@ -1,69 +1,76 @@
 class DialogService {
     constructor() {
-        this.setupEventListeners();
-    }
-
-    setupEventListeners() {
-        // 設置關閉按鈕事件
-        document.querySelectorAll('.close-dialog').forEach(button => {
-            button.addEventListener('click', () => {
-                const dialog = button.closest('.dialog');
-                if (dialog) {
-                    this.closeDialog(dialog);
-                }
-            });
+        // 初始化遮罩層
+        this.overlay = document.createElement('div');
+        this.overlay.className = 'dialog-overlay';
+        document.body.appendChild(this.overlay);
+        
+        // 監聽 ESC 鍵關閉對話框
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                this.closeAllDialogs();
+            }
         });
-
-        // 設置遮罩層點擊事件
-        const dialogOverlay = document.querySelector('.dialog-overlay');
-        if (dialogOverlay) {
-            dialogOverlay.addEventListener('click', () => {
-                document.querySelectorAll('.dialog').forEach(dialog => {
-                    dialog.classList.add('hidden');
-                });
-                dialogOverlay.classList.add('hidden');
-            });
-        }
+        
+        // 點擊遮罩層關閉對話框
+        this.overlay.addEventListener('click', () => {
+            this.closeAllDialogs();
+        });
     }
 
     openDialog(dialog) {
-        console.log('Opening dialog:', dialog);
-        const dialogOverlay = document.querySelector('.dialog-overlay');
-        if (dialog && dialogOverlay) {
-            // 隱藏其他對話框
-            document.querySelectorAll('.dialog').forEach(d => {
-                if (d !== dialog) {
-                    d.classList.add('hidden');
-                }
-            });
-            
-            // 顯示目標對話框和遮罩層
-            dialog.classList.remove('hidden');
-            dialogOverlay.classList.remove('hidden');
+        if (!dialog) return;
+        
+        // 確保對話框是 <dialog> 元素
+        if (!(dialog instanceof HTMLDialogElement)) {
+            console.error('Dialog must be a <dialog> element');
+            return;
         }
+
+        // 顯示遮罩層
+        this.overlay.style.display = 'block';
+        
+        // 顯示對話框
+        dialog.showModal();
+        
+        console.log('Dialog opened:', dialog.id);
     }
 
     closeDialog(dialog) {
-        console.log('Closing dialog:', dialog);
-        dialog.classList.add('hidden');
-        const dialogOverlay = document.querySelector('.dialog-overlay');
-        if (dialogOverlay) {
-            dialogOverlay.classList.add('hidden');
+        if (!dialog) return;
+        
+        // 確保對話框是 <dialog> 元素
+        if (!(dialog instanceof HTMLDialogElement)) {
+            console.error('Dialog must be a <dialog> element');
+            return;
         }
+
+        // 隱藏對話框
+        dialog.close();
+        
+        // 檢查是否還有其他開啟的對話框
+        const openDialogs = document.querySelectorAll('dialog[open]');
+        if (openDialogs.length === 0) {
+            // 如果沒有開啟的對話框，隱藏遮罩層
+            this.overlay.style.display = 'none';
+        }
+        
+        console.log('Dialog closed:', dialog.id);
     }
 
     closeAllDialogs() {
-        console.log('Closing all dialogs');
-        document.querySelectorAll('.dialog').forEach(dialog => {
-            dialog.classList.add('hidden');
+        // 關閉所有開啟的對話框
+        const openDialogs = document.querySelectorAll('dialog[open]');
+        openDialogs.forEach(dialog => {
+            dialog.close();
         });
-        const dialogOverlay = document.querySelector('.dialog-overlay');
-        if (dialogOverlay) {
-            dialogOverlay.classList.add('hidden');
-        }
+        
+        // 隱藏遮罩層
+        this.overlay.style.display = 'none';
+        
+        console.log('All dialogs closed');
     }
 }
 
-// 創建並導出對話框服務實例
 const dialogService = new DialogService();
 module.exports = dialogService;

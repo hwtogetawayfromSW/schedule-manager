@@ -17,9 +17,20 @@
       "position": "工讀生",
       "hourlyRate": "200",
       "id": 1737808228830
+    },
+    {
+      "id": 1737814020204,
+      "name": "yumi",
+      "position": "員工",
+      "hourlyRate": 98
     }
   ],
   "shifts": {
+    "596": {
+      "startTime": "17:04",
+      "endTime": "06:06",
+      "color": "#b1827a"
+    },
     "早": {
       "startTime": "09:30",
       "endTime": "17:00",
@@ -36,29 +47,46 @@
       "color": "#9c79ec"
     },
     "早協": {
-      "startTime": "09:30",
-      "endTime": "13:00",
-      "color": "#b5e27e"
+      "startTime": "05:05",
+      "endTime": "17:04",
+      "color": "#b1827a"
+    },
+    "假": {
+      "startTime": "20:05",
+      "endTime": "12:59",
+      "color": "#89a8ae"
     }
   },
   "schedules": {},
   "weeklyDefaults": {
-    "sunday": [],
+    "sunday": [
+      "假"
+    ],
     "monday": [
       "早",
-      "整天",
-      "早協"
+      "晚",
+      "整天"
     ],
-    "tuesday": [],
-    "wednesday": [],
-    "thursday": [],
-    "friday": [
+    "tuesday": [
+      "早",
+      "晚"
+    ],
+    "wednesday": [
       "早",
       "晚",
-      "早協"
+      "整天"
+    ],
+    "thursday": [
+      "早",
+      "晚"
+    ],
+    "friday": [
+      "早",
+      "晚"
     ],
     "saturday": [
-      "整天"
+      "整天",
+      "假"
     ]
   }
 }
