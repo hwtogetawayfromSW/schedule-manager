@@ -61,6 +61,16 @@ class CalendarService {
 
         calendarBody.innerHTML = html;
         this.setupCalendarCellEvents();
+        
+        // 更新所有單元格的排班信息
+        const cells = document.querySelectorAll('.calendar-cell');
+        cells.forEach(cell => {
+            const date = cell.dataset.date;
+            if (date) {
+                this.updateCellSchedules(cell, date);
+            }
+        });
+        
         console.log('Calendar rendered successfully');
     }
 
@@ -77,16 +87,46 @@ class CalendarService {
     }
 
     handleScheduleClick(cell, date) {
-        // 這個方法將在 renderer.js 中實現
-        console.log('Handle schedule click:', date);
+        // 打開排班對話框
+        const scheduleDialog = document.getElementById('scheduleDialog');
+        if (scheduleDialog) {
+            const selectedDateSpan = document.getElementById('selectedDate');
+            if (selectedDateSpan) {
+                selectedDateSpan.textContent = date;
+            }
+            dialogService.openDialog(scheduleDialog);
+        }
     }
 
     updateCellSchedules(cell, date) {
-        // 這個方法將在 renderer.js 中實現
-        console.log('Update cell schedules:', date);
+        const scheduleContainer = cell.querySelector('.schedule-container');
+        if (!scheduleContainer) return;
+
+        const schedules = scheduleService.getDaySchedules(date);
+        const shifts = scheduleService.getShifts();
+
+        scheduleContainer.innerHTML = schedules.map(schedule => {
+            const shift = shifts[schedule.shiftName];
+            if (!shift) return '';
+
+            const style = `
+                background-color: ${shift.color};
+                color: white;
+                opacity: ${schedule.isDefault ? '0.6' : '1'};
+            `;
+
+            return `
+                <div class="schedule-item" style="${style}" title="${schedule.isDefault ? '預設班別' : ''}">
+                    ${schedule.shiftName}
+                    ${schedule.isDefault ? ' (預設)' : ''}
+                </div>
+            `;
+        }).join('');
     }
 }
 
 // 創建並導出日曆服務實例
 const calendarService = new CalendarService();
+const scheduleService = require('./scheduleService');
+const dialogService = require('./dialogService');
 module.exports = calendarService;

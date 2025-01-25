@@ -3,48 +3,68 @@ class ScheduleService {
         this.employees = [];
         this.shifts = {};
         this.schedules = {};
-        this.weeklyDefaults = {};
-        this.nextEmployeeId = 1;
+        this.weeklyDefaults = {
+            monday: [],
+            tuesday: [],
+            wednesday: [],
+            thursday: [],
+            friday: [],
+            saturday: [],
+            sunday: []
+        };
+        console.log('Initializing ScheduleService...');
+        this.loadData();
+        console.log('ScheduleService initialized successfully');
     }
 
-    initialize() {
-        console.log('Initializing ScheduleService...');
+    loadData() {
         try {
-            // 從本地存儲加載數據
-            const savedData = localStorage.getItem('scheduleData');
-            if (savedData) {
-                const data = JSON.parse(savedData);
+            const fs = require('fs');
+            const path = require('path');
+            const dataPath = path.join(__dirname, '../data/schedule-data.json');
+
+            if (fs.existsSync(dataPath)) {
+                const data = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
                 this.employees = data.employees || [];
                 this.shifts = data.shifts || {};
                 this.schedules = data.schedules || {};
-                this.weeklyDefaults = data.weeklyDefaults || {};
-                this.nextEmployeeId = data.nextEmployeeId || 1;
+                this.weeklyDefaults = data.weeklyDefaults || {
+                    monday: [],
+                    tuesday: [],
+                    wednesday: [],
+                    thursday: [],
+                    friday: [],
+                    saturday: [],
+                    sunday: []
+                };
             }
-            console.log('ScheduleService initialized successfully');
         } catch (error) {
-            console.error('Failed to initialize ScheduleService:', error);
-            // 重置為默認值
-            this.employees = [];
-            this.shifts = {};
-            this.schedules = {};
-            this.weeklyDefaults = {};
-            this.nextEmployeeId = 1;
+            console.error('Error loading data:', error);
         }
     }
 
     saveData() {
         try {
+            const fs = require('fs');
+            const path = require('path');
+            const dataPath = path.join(__dirname, '../data/schedule-data.json');
+            const dataDir = path.dirname(dataPath);
+
+            if (!fs.existsSync(dataDir)) {
+                fs.mkdirSync(dataDir, { recursive: true });
+            }
+
             const data = {
                 employees: this.employees,
                 shifts: this.shifts,
                 schedules: this.schedules,
-                weeklyDefaults: this.weeklyDefaults,
-                nextEmployeeId: this.nextEmployeeId
+                weeklyDefaults: this.weeklyDefaults
             };
-            localStorage.setItem('scheduleData', JSON.stringify(data));
+
+            fs.writeFileSync(dataPath, JSON.stringify(data, null, 2));
             console.log('Data saved successfully');
         } catch (error) {
-            console.error('Failed to save data:', error);
+            console.error('Error saving data:', error);
         }
     }
 
@@ -52,37 +72,42 @@ class ScheduleService {
     addEmployee(employee) {
         try {
             const newEmployee = {
-                id: this.nextEmployeeId++,
-                name: employee.name,
-                position: employee.position,
-                hourlyRate: parseFloat(employee.hourlyRate) || 0
+                ...employee,
+                id: Date.now()
             };
             this.employees.push(newEmployee);
             this.saveData();
             return newEmployee;
         } catch (error) {
-            console.error('Failed to add employee:', error);
-            return null;
+            console.error('Error adding employee:', error);
+            throw error;
         }
     }
 
     removeEmployee(employeeId) {
         try {
             this.employees = this.employees.filter(e => e.id !== employeeId);
-            // 移除該員工的所有排班
+            // 同時移除該員工的所有排班
             Object.keys(this.schedules).forEach(date => {
                 this.schedules[date] = this.schedules[date].filter(s => s.employeeId !== employeeId);
             });
             this.saveData();
-            return true;
         } catch (error) {
-            console.error('Failed to remove employee:', error);
-            return false;
+            console.error('Error removing employee:', error);
+            throw error;
         }
     }
 
-    getEmployee(employeeId) {
-        return this.employees.find(e => e.id === employeeId);
+    getEmployeeById(id) {
+        return this.employees.find(emp => emp.id === id);
+    }
+
+    updateEmployee(employee) {
+        const index = this.employees.findIndex(emp => emp.id === employee.id);
+        if (index !== -1) {
+            this.employees[index] = { ...this.employees[index], ...employee };
+            this.saveData();
+        }
     }
 
     getEmployees() {
@@ -98,25 +123,26 @@ class ScheduleService {
                 color: shift.color
             };
             this.saveData();
-            return true;
         } catch (error) {
-            console.error('Failed to add shift:', error);
-            return false;
+            console.error('Error adding shift:', error);
+            throw error;
         }
     }
 
     removeShift(shiftName) {
         try {
             delete this.shifts[shiftName];
-            // 移除該班別的所有排班
+            // 同時移除該班別的所有排班和預設設定
             Object.keys(this.schedules).forEach(date => {
                 this.schedules[date] = this.schedules[date].filter(s => s.shiftName !== shiftName);
             });
+            Object.keys(this.weeklyDefaults).forEach(day => {
+                this.weeklyDefaults[day] = this.weeklyDefaults[day].filter(s => s !== shiftName);
+            });
             this.saveData();
-            return true;
         } catch (error) {
-            console.error('Failed to remove shift:', error);
-            return false;
+            console.error('Error removing shift:', error);
+            throw error;
         }
     }
 
@@ -124,28 +150,33 @@ class ScheduleService {
         return { ...this.shifts };
     }
 
+    // 每週預設班別管理
+    setWeeklyDefaults(defaults) {
+        try {
+            this.weeklyDefaults = { ...defaults };
+            this.saveData();
+            console.log('Weekly defaults updated:', this.weeklyDefaults);
+        } catch (error) {
+            console.error('Error setting weekly defaults:', error);
+            throw error;
+        }
+    }
+
+    getWeeklyDefaults() {
+        return { ...this.weeklyDefaults };
+    }
+
     // 排班管理
-    updateDaySchedule(date, employeeId, shiftName, notes = '') {
+    addSchedule(date, employeeId, shiftName) {
         try {
             if (!this.schedules[date]) {
                 this.schedules[date] = [];
             }
-            
-            // 移除該員工在該日期的現有排班
-            this.schedules[date] = this.schedules[date].filter(s => s.employeeId !== employeeId);
-            
-            // 添加新排班
-            this.schedules[date].push({
-                employeeId,
-                shiftName,
-                notes
-            });
-            
+            this.schedules[date].push({ employeeId, shiftName });
             this.saveData();
-            return true;
         } catch (error) {
-            console.error('Failed to update day schedule:', error);
-            return false;
+            console.error('Error adding schedule:', error);
+            throw error;
         }
     }
 
@@ -155,86 +186,81 @@ class ScheduleService {
                 this.schedules[date] = this.schedules[date].filter(s => s.employeeId !== employeeId);
                 this.saveData();
             }
-            return true;
         } catch (error) {
-            console.error('Failed to remove day schedule:', error);
-            return false;
+            console.error('Error removing schedule:', error);
+            throw error;
         }
     }
 
-    getDaySchedule(date) {
-        return this.schedules[date] || [];
+    getDaySchedules(date) {
+        try {
+            const actualSchedules = this.schedules[date] || [];
+            if (actualSchedules.length > 0) {
+                return actualSchedules.map(schedule => ({
+                    ...schedule,
+                    isDefault: false
+                }));
+            }
+
+            // 如果沒有實際排班，返回預設班別
+            const dayOfWeek = new Date(date).getDay();
+            const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+            const defaultShifts = this.weeklyDefaults[days[dayOfWeek]] || [];
+            
+            return defaultShifts.map(shiftName => ({
+                shiftName,
+                isDefault: true
+            }));
+        } catch (error) {
+            console.error('Error getting day schedules:', error);
+            return [];
+        }
     }
 
     getMonthSchedule(year, month) {
         const result = {};
         const startDate = new Date(year, month - 1, 1);
         const endDate = new Date(year, month, 0);
-        
-        for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+
+        for (let d = startDate; d <= endDate; d.setDate(d.getDate() + 1)) {
             const dateStr = d.toISOString().split('T')[0];
-            result[dateStr] = this.getDaySchedule(dateStr);
+            result[dateStr] = this.getDaySchedules(dateStr);
         }
-        
+
         return result;
     }
 
-    // 每週預設設定
-    setWeeklyDefaults(settings) {
-        try {
-            this.weeklyDefaults = { ...settings };
-            this.saveData();
-            return true;
-        } catch (error) {
-            console.error('Failed to set weekly defaults:', error);
-            return false;
-        }
-    }
-
-    getWeeklyDefaults() {
-        return { ...this.weeklyDefaults };
-    }
-
-    // 統計計算
+    // 統計功能
     calculateStats() {
-        try {
-            let totalShifts = 0;
-            let totalHours = 0;
-            let totalSalary = 0;
+        const stats = {
+            totalShifts: 0,
+            totalHours: 0,
+            totalSalary: 0
+        };
 
-            Object.values(this.schedules).forEach(daySchedules => {
-                daySchedules.forEach(schedule => {
-                    totalShifts++;
-                    const shift = this.shifts[schedule.shiftName];
-                    if (shift) {
-                        const startTime = new Date(`2000-01-01T${shift.startTime}`);
-                        const endTime = new Date(`2000-01-01T${shift.endTime}`);
-                        let hours = (endTime - startTime) / (1000 * 60 * 60);
-                        if (hours < 0) hours += 24; // 處理跨日的情況
-                        
-                        totalHours += hours;
-                        
-                        const employee = this.getEmployee(schedule.employeeId);
-                        if (employee) {
-                            totalSalary += hours * employee.hourlyRate;
-                        }
+        Object.values(this.schedules).forEach(daySchedules => {
+            daySchedules.forEach(schedule => {
+                const employee = this.employees.find(e => e.id === schedule.employeeId);
+                const shift = this.shifts[schedule.shiftName];
+                
+                if (employee && shift) {
+                    stats.totalShifts++;
+                    
+                    const startTime = new Date(`2000-01-01T${shift.startTime}`);
+                    const endTime = new Date(`2000-01-01T${shift.endTime}`);
+                    let hours = (endTime - startTime) / (1000 * 60 * 60);
+                    
+                    if (hours < 0) {
+                        hours += 24;
                     }
-                });
+                    
+                    stats.totalHours += hours;
+                    stats.totalSalary += hours * employee.hourlyRate;
+                }
             });
+        });
 
-            return {
-                totalShifts,
-                totalHours: Math.round(totalHours * 10) / 10,
-                totalSalary: Math.round(totalSalary)
-            };
-        } catch (error) {
-            console.error('Failed to calculate stats:', error);
-            return {
-                totalShifts: 0,
-                totalHours: 0,
-                totalSalary: 0
-            };
-        }
+        return stats;
     }
 }
 

@@ -78,9 +78,9 @@ body {
 
 .schedule-item {
     margin: 2px 0;
-    padding: 2px 4px;
+    padding: 4px 6px;
     border-radius: 3px;
-    background-color: #e9ecef;
+    font-size: 0.85em;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -206,36 +206,74 @@ button:hover {
 
 /* 每週設定樣式 */
 .weekly-settings {
-    margin-top: 20px;
+    margin-top: 30px;
+    border-top: 1px solid #dee2e6;
+    padding-top: 20px;
+}
+
+.weekly-settings h3 {
+    margin-bottom: 20px;
+    color: #333;
+    text-align: center;
 }
 
 #weeklySettingsContainer {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 15px;
-    margin-top: 15px;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 10px;
+    margin: 20px 0;
 }
 
 .weekly-setting {
-    padding: 10px;
-    background-color: #f8f9fa;
-    border-radius: 4px;
+    background: white;
+    padding: 15px;
+    border-radius: 6px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    border: 1px solid #e9ecef;
 }
 
 .weekly-setting h3 {
-    margin-bottom: 10px;
+    font-size: 1em;
+    color: #495057;
+    margin-bottom: 15px;
+    text-align: center;
+    border-bottom: 2px solid #e9ecef;
+    padding-bottom: 8px;
 }
 
-.shift-buttons {
+.shift-checkboxes {
     display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-top: 15px;
+    flex-direction: column;
+    gap: 8px;
 }
 
-.shift-button {
-    padding: 5px 10px;
-    border-radius: 3px;
-    color: white;
+.shift-checkboxes label {
+    display: flex;
+    align-items: center;
+    padding: 6px 8px;
+    border-radius: 4px;
     font-size: 0.9em;
+    transition: background-color 0.2s;
+    cursor: pointer;
+    margin: 0;
+}
+
+.shift-checkboxes label:hover {
+    background-color: #f8f9fa;
+}
+
+.shift-checkboxes input[type="checkbox"] {
+    margin-right: 8px;
+}
+
+#saveShiftSettingsBtn {
+    margin-top: 20px;
+    width: 100%;
+    padding: 12px;
+    background-color: #28a745;
+    font-weight: bold;
+}
+
+#saveShiftSettingsBtn:hover {
+    background-color: #218838;
 }

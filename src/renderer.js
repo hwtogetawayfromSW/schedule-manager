@@ -22,9 +22,6 @@ document.addEventListener('DOMContentLoaded', () => {
 function initializeApp() {
     console.log('Initializing application...');
     
-    // 初始化排班服務
-    scheduleService.initialize();
-    
     // 設置年月選擇器
     setupYearMonthSelectors();
     
@@ -113,6 +110,8 @@ function setupEmployeeManager() {
     
     // 打開新增員工對話框
     addEmployeeBtn.addEventListener('click', () => {
+        addEmployeeForm.reset();
+        delete addEmployeeForm.dataset.editingId;
         dialogService.closeDialog(employeeManagerDialog);
         dialogService.openDialog(addEmployeeDialog);
     });
@@ -127,12 +126,23 @@ function setupEmployeeManager() {
             hourlyRate: formData.get('hourlyRate')
         };
         
-        scheduleService.addEmployee(employee);
+        const editingId = addEmployeeForm.dataset.editingId;
+        if (editingId) {
+            // 編輯現有員工
+            employee.id = parseInt(editingId);
+            scheduleService.updateEmployee(employee);
+        } else {
+            // 新增員工
+            scheduleService.addEmployee(employee);
+        }
+        
         addEmployeeForm.reset();
+        delete addEmployeeForm.dataset.editingId;
         dialogService.closeDialog(addEmployeeDialog);
         dialogService.openDialog(employeeManagerDialog);
         renderEmployeeManagerList();
         renderEmployeeList();
+        calendarService.renderCalendar(); // 更新日曆顯示
     });
 
     console.log('Employee manager setup complete');
@@ -319,10 +329,33 @@ function renderEmployeeManagerList() {
             <td>${employee.position}</td>
             <td>${employee.hourlyRate}</td>
             <td>
+                <button class="btn-edit" onclick="window.editEmployee(${employee.id})">編輯</button>
                 <button class="btn-delete" onclick="window.removeEmployee(${employee.id})">刪除</button>
             </td>
         </tr>
     `).join('');
+}
+
+// 編輯員工
+window.editEmployee = function(employeeId) {
+    const employee = scheduleService.getEmployeeById(employeeId);
+    if (!employee) return;
+
+    const addEmployeeForm = document.getElementById('addEmployeeForm');
+    const addEmployeeDialog = document.getElementById('addEmployeeDialog');
+    const employeeManagerDialog = document.getElementById('employeeManagerDialog');
+
+    // 填充表單
+    addEmployeeForm.querySelector('[name="name"]').value = employee.name;
+    addEmployeeForm.querySelector('[name="position"]').value = employee.position;
+    addEmployeeForm.querySelector('[name="hourlyRate"]').value = employee.hourlyRate;
+
+    // 暫存員工ID
+    addEmployeeForm.dataset.editingId = employeeId;
+
+    // 切換對話框
+    dialogService.closeDialog(employeeManagerDialog);
+    dialogService.openDialog(addEmployeeDialog);
 }
 
 // 渲染班別列表
@@ -359,20 +392,32 @@ function renderWeeklySettings() {
         return;
     }
     
-    const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    const dayNames = {
+        'sunday': '週日',
+        'monday': '週一',
+        'tuesday': '週二',
+        'wednesday': '週三',
+        'thursday': '週四',
+        'friday': '週五',
+        'saturday': '週六'
+    };
+    
+    const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
     const shifts = scheduleService.getShifts();
     const weeklyDefaults = scheduleService.getWeeklyDefaults();
     
     weeklySettingsContainer.innerHTML = days.map(day => `
         <div class="weekly-setting" id="weekly-${day}">
-            <h3>${day.charAt(0).toUpperCase() + day.slice(1)}</h3>
-            ${Object.keys(shifts).map(shiftName => `
-                <label>
-                    <input type="checkbox" value="${shiftName}"
-                        ${weeklyDefaults[day]?.includes(shiftName) ? 'checked' : ''}>
-                    ${shiftName}
-                </label>
-            `).join('')}
+            <h3>${dayNames[day]}</h3>
+            <div class="shift-checkboxes">
+                ${Object.entries(shifts).map(([shiftName, shift]) => `
+                    <label style="border-left: 3px solid ${shift.color}">
+                        <input type="checkbox" value="${shiftName}"
+                            ${weeklyDefaults[day]?.includes(shiftName) ? 'checked' : ''}>
+                        ${shiftName}
+                    </label>
+                `).join('')}
+            </div>
         </div>
     `).join('');
 }

@@ -1,0 +1,64 @@
+{
+  "employees": [
+    {
+      "name": "E01",
+      "position": "實習生",
+      "hourlyRate": "0",
+      "id": 1737808207061
+    },
+    {
+      "name": "E02",
+      "position": "實習生",
+      "hourlyRate": "0",
+      "id": 1737808217013
+    },
+    {
+      "name": "ree",
+      "position": "工讀生",
+      "hourlyRate": "200",
+      "id": 1737808228830
+    }
+  ],
+  "shifts": {
+    "早": {
+      "startTime": "09:30",
+      "endTime": "17:00",
+      "color": "#dcacac"
+    },
+    "晚": {
+      "startTime": "17:00",
+      "endTime": "21:30",
+      "color": "#82f2ea"
+    },
+    "整天": {
+      "startTime": "09:30",
+      "endTime": "17:30",
+      "color": "#9c79ec"
+    },
+    "早協": {
+      "startTime": "09:30",
+      "endTime": "13:00",
+      "color": "#b5e27e"
+    }
+  },
+  "schedules": {},
+  "weeklyDefaults": {
+    "sunday": [],
+    "monday": [
+      "早",
+      "整天",
+      "早協"
+    ],
+    "tuesday": [],
+    "wednesday": [],
+    "thursday": [],
+    "friday": [
+      "早",
+      "晚",
+      "早協"
+    ],
+    "saturday": [
+      "整天"
+    ]
+  }
+}
