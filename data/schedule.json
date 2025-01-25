@@ -1,0 +1,212 @@
+[
+  {
+    "year": 2025,
+    "month": 2,
+    "day": 1,
+    "shifts": [
+      {
+        "name": "早班搭班",
+        "time": "09:30-13:00",
+        "staff": [
+          "鐘凡妍"
+        ]
+      },
+      {
+        "name": "週六整天",
+        "time": "09:30-21:30",
+        "staff": [
+          "魏韶馳"
+        ]
+      }
+    ],
+    "isHoliday": false
+  },
+  {
+    "year": 2025,
+    "month": 2,
+    "day": 7,
+    "shifts": [
+      {
+        "name": "早班主位",
+        "time": "",
+        "staff": [
+          "魏韶馳"
+        ]
+      },
+      {
+        "name": "晚班主位",
+        "time": "",
+        "staff": [
+          "鐘凡妍"
+        ]
+      },
+      {
+        "name": "早班搭班",
+        "time": "",
+        "staff": [
+          "鐘凡妍"
+        ]
+      },
+      {
+        "name": "晚班搭班",
+        "time": "",
+        "staff": []
+      }
+    ]
+  },
+  {
+    "year": 2025,
+    "month": 2,
+    "day": 8,
+    "shifts": [
+      {
+        "name": "週六整天",
+        "time": "",
+        "staff": []
+      }
+    ]
+  },
+  {
+    "year": 2025,
+    "month": 2,
+    "day": 15,
+    "shifts": [
+      {
+        "name": "週六整天",
+        "time": "",
+        "staff": []
+      }
+    ]
+  },
+  {
+    "year": 2025,
+    "month": 2,
+    "day": 22,
+    "shifts": [
+      {
+        "name": "週六整天",
+        "time": "",
+        "staff": []
+      }
+    ]
+  },
+  {
+    "year": 2025,
+    "month": 3,
+    "day": 1,
+    "shifts": [
+      {
+        "name": "週六整天",
+        "time": "",
+        "staff": [
+          "吳乾宸"
+        ]
+      }
+    ]
+  },
+  {
+    "year": 2025,
+    "month": 3,
+    "day": 8,
+    "shifts": [
+      {
+        "name": "早班搭班",
+        "time": "",
+        "staff": [
+          "鐘凡妍"
+        ]
+      }
+    ]
+  },
+  {
+    "year": 2025,
+    "month": 2,
+    "day": 5,
+    "shifts": [
+      {
+        "name": "早班主位",
+        "time": "",
+        "staff": [
+          "郭強影"
+        ]
+      },
+      {
+        "name": "晚班主位",
+        "time": "",
+        "staff": [
+          "薛亦凝"
+        ]
+      },
+      {
+        "name": "晚班搭班",
+        "time": "",
+        "staff": [
+          "鐘凡妍"
+        ]
+      }
+    ]
+  },
+  {
+    "year": 2025,
+    "month": 2,
+    "day": 11,
+    "shifts": [
+      {
+        "name": "早班主位",
+        "time": "",
+        "staff": [
+          "郭強影"
+        ]
+      },
+      {
+        "name": "晚班主位",
+        "time": "",
+        "staff": [
+          "袁嶽棟"
+        ]
+      },
+      {
+        "name": "早班搭班",
+        "time": "",
+        "staff": [
+          "余苑靖"
+        ]
+      }
+    ]
+  },
+  {
+    "year": 2025,
+    "month": 2,
+    "day": 6,
+    "shifts": [
+      {
+        "name": "小雞",
+        "time": "",
+        "staff": [
+          "eli"
+        ]
+      }
+    ]
+  },
+  {
+    "year": 2025,
+    "month": 2,
+    "day": 28,
+    "shifts": [],
+    "isHoliday": true
+  },
+  {
+    "year": 2025,
+    "month": 2,
+    "day": 2,
+    "shifts": [],
+    "isHoliday": true
+  },
+  {
+    "year": 2025,
+    "month": 2,
+    "day": 9,
+    "shifts": [],
+    "isHoliday": true
+  }
+]

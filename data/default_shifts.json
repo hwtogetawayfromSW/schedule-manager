@@ -1,0 +1,37 @@
+{
+  "weekday": {
+    "早班主位": {
+      "name": "早班主位",
+      "startTime": "09:30",
+      "endTime": "17:00",
+      "maxStaff": 1
+    },
+    "晚班主位": {
+      "name": "晚班主位",
+      "startTime": "16:00",
+      "endTime": "21:30",
+      "maxStaff": 1
+    },
+    "早班搭班": {
+      "name": "早班搭班",
+      "startTime": "09:30",
+      "endTime": "13:00",
+      "maxStaff": 1
+    },
+    "晚班搭班": {
+      "name": "晚班搭班",
+      "startTime": "18:00",
+      "endTime": "21:30",
+      "maxStaff": 1
+    }
+  },
+  "saturday": {
+    "週六整天": {
+      "name": "週六整天",
+      "startTime": "",
+      "endTime": "",
+      "maxStaff": 1
+    }
+  },
+  "sunday": {}
+}

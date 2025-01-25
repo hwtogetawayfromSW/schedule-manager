@@ -1,0 +1,33 @@
+{
+  "name": "schedule-manager",
+  "version": "1.0.0",
+  "description": "排班管理系統",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "排班",
+    "管理系統",
+    "electron"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "electron": "^28.1.0",
+    "html2canvas": "^1.4.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "@mui/material": "^5.15.0",
+    "@mui/icons-material": "^5.15.0",
+    "@emotion/react": "^11.11.1",
+    "@emotion/styled": "^11.11.0"
+  },
+  "devDependencies": {
+    "electron-builder": "^24.9.1",
+    "@babel/core": "^7.23.0",
+    "@babel/preset-react": "^7.23.0",
+    "electron-reload": "^2.0.0-alpha.1"
+  }
+}

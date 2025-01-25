@@ -1,0 +1,70 @@
+const fs = require('fs');
+const path = require('path');
+const store = require('./store');
+const { loadSettings } = require('./modules/settings');
+const { exportScheduleAsImage, exportICS } = require('./modules/exports');
+const { renderCalendar } = require('./modules/calendar');
+const { renderStaffList } = require('./modules/staff');
+const { initializeSchedule } = require('./modules/schedule');
+
+// Initialize application
+async function initialize() {
+    try {
+        // 確保 data 目錄存在
+        const dataDir = path.join(__dirname, '../data');
+        if (!fs.existsSync(dataDir)) {
+            fs.mkdirSync(dataDir);
+        }
+        
+        await loadSettings();
+        await initializeSchedule();
+        setupYearMonthSelectors();
+        setupEventListeners();
+        renderCalendar();
+        renderStaffList();
+    } catch (error) {
+        console.error('初始化失敗:', error);
+        alert('系統初始化失敗: ' + error.message);
+    }
+}
+
+function setupEventListeners() {
+    document.getElementById('yearSelector')?.addEventListener('change', renderCalendar);
+    document.getElementById('monthSelector')?.addEventListener('change', renderCalendar);
+    document.getElementById('publishSchedule')?.addEventListener('click', exportScheduleAsImage);
+    document.getElementById('exportICS')?.addEventListener('click', exportICS);
+}
+
+function getNextMonth() {
+    const today = new Date();
+    return new Date(today.getFullYear(), today.getMonth() + 1);
+}
+
+function setupYearMonthSelectors() {
+    const yearSelector = document.getElementById('yearSelector');
+    const monthSelector = document.getElementById('monthSelector');
+    if (!yearSelector || !monthSelector) return;
+
+    const nextMonth = getNextMonth();
+    yearSelector.innerHTML = '';
+    monthSelector.innerHTML = '';
+    
+    const currentYear = nextMonth.getFullYear();
+    for (let year = currentYear - 1; year <= currentYear + 2; year++) {
+        const option = document.createElement('option');
+        option.value = year;
+        option.textContent = `${year}年`;
+        if (year === currentYear) option.selected = true;
+        yearSelector.appendChild(option);
+    }
+
+    for (let month = 1; month <= 12; month++) {
+        const option = document.createElement('option');
+        option.value = month;
+        option.textContent = `${month}月`;
+        if (month === nextMonth.getMonth() + 1) option.selected = true;
+        monthSelector.appendChild(option);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', initialize);

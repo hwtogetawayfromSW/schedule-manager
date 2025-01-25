@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>C20 排班系統</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="./styles.css">
+</head>
+<body class="bg-gray-100">
+    <div class="min-h-screen">
+        <nav class="bg-white shadow-lg">
+            <div class="max-w-7xl mx-auto px-4">
+                <div class="flex justify-between h-16">
+                    <div class="flex">
+                        <div class="flex-shrink-0 flex items-center">
+                            <h1 class="text-xl font-bold">C20 排班系統</h1>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <select id="yearSelector" class="rounded-md border-gray-300 shadow-sm">
+                        </select>
+                        <select id="monthSelector" class="rounded-md border-gray-300 shadow-sm">
+                        </select>
+                        <button id="employeeManagerBtn" class="btn btn-primary">
+                            管理員工
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <main class="max-w-7xl mx-auto py-6 px-4">
+            <div class="grid grid-cols-4 gap-4">
+                <!-- 左側員工列表 -->
+                <div class="col-span-1 bg-white rounded-lg shadow-md p-4">
+                    <h2 class="text-lg font-semibold mb-4">員工列表</h2>
+                    <div id="employeeList" class="space-y-2">
+                        <!-- 員工列表將由 JavaScript 動態生成 -->
+                    </div>
+                    <div class="employee-stats mt-4 pt-4 border-t">
+                        <h3 class="text-md font-semibold mb-2">本月統計</h3>
+                        <div id="employeeStats" class="text-sm space-y-2">
+                            <!-- 統計資訊將由 JavaScript 動態生成 -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 右側日曆 -->
+                <div class="col-span-3">
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <div id="calendar">
+                            <!-- 日曆內容將由 JavaScript 動態生成 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 員工管理對話框 -->
+    <div id="employeeManagerDialog" class="dialog hidden">
+        <div class="dialog-content">
+            <h2 class="text-xl font-bold mb-4">員工管理</h2>
+            <div class="mb-4">
+                <button id="addEmployeeBtn" class="btn btn-primary">新增員工</button>
+            </div>
+            <div id="employeeManagerList" class="space-y-2">
+                <!-- 員工列表將由 JavaScript 動態生成 -->
+            </div>
+            <div class="dialog-actions mt-4">
+                <button class="btn btn-secondary close-dialog">關閉</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 新增員工對話框 -->
+    <div id="addEmployeeDialog" class="dialog hidden">
+        <div class="dialog-content">
+            <h2 class="text-xl font-bold mb-4">新增員工</h2>
+            <form id="addEmployeeForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">姓名</label>
+                    <input type="text" name="name" required class="mt-1 form-input">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">職位</label>
+                    <select name="position" required class="mt-1 form-select">
+                        <option value="正職">正職</option>
+                        <option value="兼職">兼職</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">時薪</label>
+                    <input type="number" name="hourlyRate" class="mt-1 form-input">
+                </div>
+                <div class="dialog-actions">
+                    <button type="button" class="btn btn-secondary close-dialog">取消</button>
+                    <button type="submit" class="btn btn-primary">確定</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 排班對話框 -->
+    <div id="scheduleDialog" class="dialog hidden">
+        <div class="dialog-content">
+            <h2 class="text-xl font-bold mb-4">排班</h2>
+            <div class="selected-date mb-4">
+                <span id="selectedDate"></span>
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700">選擇員工</label>
+                <select id="employeeSelector" class="mt-1 form-select">
+                    <!-- 員工選項將由 JavaScript 動態生成 -->
+                </select>
+            </div>
+            <div id="currentSchedules" class="mb-4">
+                <!-- 當前排班將由 JavaScript 動態生成 -->
+            </div>
+            <div class="shift-buttons grid grid-cols-2 gap-2">
+                <!-- 班次按鈕將由 JavaScript 動態生成 -->
+            </div>
+            <div class="mt-4">
+                <label class="block text-sm font-medium text-gray-700">備註</label>
+                <textarea id="scheduleNotes" class="mt-1 form-textarea" rows="2"></textarea>
+            </div>
+            <div class="dialog-actions mt-4">
+                <button class="btn btn-secondary close-dialog">取消</button>
+                <button id="clearScheduleBtn" class="btn btn-danger">清除</button>
+                <button id="saveScheduleBtn" class="btn btn-primary">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="./src/renderer.js"></script>
+</body>
+</html>
