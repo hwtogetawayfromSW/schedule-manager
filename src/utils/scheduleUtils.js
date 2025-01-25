@@ -1,14 +1,15 @@
 // 計算工作時數
-export function calculateWorkHours(startTime, endTime) {
-    if (!startTime || !endTime) return 0;
-    
-    const [startHour, startMinute] = startTime.split(':').map(Number);
-    const [endHour, endMinute] = endTime.split(':').map(Number);
+export function calculateWorkHours(shift) {
+    if (!shift || !shift.startTime || !shift.endTime) {
+        return 0;
+    }
+
+    const [startHour, startMinute] = shift.startTime.split(':').map(Number);
+    const [endHour, endMinute] = shift.endTime.split(':').map(Number);
     
     let hours = endHour - startHour;
     let minutes = endMinute - startMinute;
     
-    if (hours < 0) hours += 24;
     if (minutes < 0) {
         hours -= 1;
         minutes += 60;
@@ -17,33 +18,55 @@ export function calculateWorkHours(startTime, endTime) {
     return hours + minutes / 60;
 }
 
-// 計算月度工時和薪資
-export function calculateMonthlyStats(scheduleData, employees, shifts) {
+// 計算月度統計信息
+export function calculateMonthlyStats(monthSchedule, employees, shifts) {
     const stats = {};
     
+    // 初始化每個員工的統計信息
     employees.forEach(employee => {
         stats[employee.id] = {
             totalHours: 0,
-            totalSalary: 0,
-            shiftCounts: {}
+            shiftCounts: {},
+            totalShifts: 0
         };
     });
     
-    Object.entries(scheduleData).forEach(([date, daySchedule]) => {
-        daySchedule.forEach(schedule => {
-            const employee = employees.find(e => e.id === schedule.employeeId);
-            const shift = shifts[schedule.shiftName];
-            
-            if (employee && shift) {
-                const hours = calculateWorkHours(shift.startTime, shift.endTime);
-                const hourlyRate = employee.hourlyRate || shift.hourlyRate;
-                
-                stats[employee.id].totalHours += hours;
-                stats[employee.id].totalSalary += hours * hourlyRate;
-                
-                stats[employee.id].shiftCounts[schedule.shiftName] = 
-                    (stats[employee.id].shiftCounts[schedule.shiftName] || 0) + 1;
+    // 如果沒有排班數據，直接返回初始化的統計信息
+    if (!monthSchedule || typeof monthSchedule !== 'object') {
+        return stats;
+    }
+    
+    // 遍歷每一天的排班
+    Object.entries(monthSchedule).forEach(([date, daySchedules]) => {
+        // 確保 daySchedules 是數組
+        if (!Array.isArray(daySchedules)) {
+            return;
+        }
+        
+        // 處理每個排班
+        daySchedules.forEach(schedule => {
+            if (!schedule || !schedule.employeeId || !schedule.shiftName) {
+                return;
             }
+            
+            const employeeStats = stats[schedule.employeeId];
+            if (!employeeStats) {
+                return;
+            }
+            
+            const shift = shifts[schedule.shiftName];
+            if (!shift) {
+                return;
+            }
+            
+            // 計算工時
+            const hours = calculateWorkHours(shift);
+            employeeStats.totalHours += hours;
+            
+            // 統計班次數量
+            employeeStats.shiftCounts[schedule.shiftName] = 
+                (employeeStats.shiftCounts[schedule.shiftName] || 0) + 1;
+            employeeStats.totalShifts += 1;
         });
     });
     

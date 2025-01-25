@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>排班管理系統</title>
+    <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>排班管理系統</h1>
+            <div class="controls">
+                <select id="yearSelector"></select>
+                <select id="monthSelector"></select>
+                <button id="employeeManagerBtn">管理員工</button>
+                <button id="shiftSettingsBtn">班別設定</button>
+            </div>
+        </div>
+
+        <div class="calendar-container">
+            <table id="calendar">
+                <thead>
+                    <tr>
+                        <th>日</th>
+                        <th>一</th>
+                        <th>二</th>
+                        <th>三</th>
+                        <th>四</th>
+                        <th>五</th>
+                        <th>六</th>
+                    </tr>
+                </thead>
+                <tbody id="calendarBody"></tbody>
+            </table>
+        </div>
+
+        <div id="statsContainer" class="stats-container"></div>
+    </div>
+
+    <!-- 對話框 -->
+    <div class="dialog-overlay hidden"></div>
+
+    <!-- 排班對話框 -->
+    <div id="scheduleDialog" class="dialog hidden">
+        <div class="dialog-header">
+            <h2>排班設定</h2>
+            <button class="close-dialog">×</button>
+        </div>
+        <div class="dialog-content">
+            <div class="date-display">日期：<span id="selectedDate"></span></div>
+            <select id="employeeSelector"></select>
+            <textarea id="scheduleNotes" placeholder="備註"></textarea>
+            <div id="currentSchedules" class="current-schedules"></div>
+            <div class="shift-buttons"></div>
+        </div>
+    </div>
+
+    <!-- 員工管理對話框 -->
+    <div id="employeeManagerDialog" class="dialog hidden">
+        <div class="dialog-header">
+            <h2>員工管理</h2>
+            <button class="close-dialog">×</button>
+        </div>
+        <div class="dialog-content">
+            <button id="addEmployeeBtn">新增員工</button>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>姓名</th>
+                        <th>職位</th>
+                        <th>時薪</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="employeeManagerList"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 新增員工對話框 -->
+    <div id="addEmployeeDialog" class="dialog hidden">
+        <div class="dialog-header">
+            <h2>新增員工</h2>
+            <button class="close-dialog">×</button>
+        </div>
+        <div class="dialog-content">
+            <form id="addEmployeeForm">
+                <div class="form-group">
+                    <label>姓名：</label>
+                    <input type="text" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label>職位：</label>
+                    <input type="text" name="position" required>
+                </div>
+                <div class="form-group">
+                    <label>時薪：</label>
+                    <input type="number" name="hourlyRate" min="0" step="1" required>
+                </div>
+                <button type="submit">新增</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 班別設定對話框 -->
+    <div id="shiftSettingsDialog" class="dialog hidden">
+        <div class="dialog-header">
+            <h2>班別設定</h2>
+            <button class="close-dialog">×</button>
+        </div>
+        <div class="dialog-content">
+            <button id="addShiftBtn">新增班別</button>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>名稱</th>
+                        <th>開始時間</th>
+                        <th>結束時間</th>
+                        <th>顏色</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="shiftList"></tbody>
+            </table>
+            <div class="weekly-settings">
+                <h3>每週預設班別</h3>
+                <div id="weeklySettingsContainer"></div>
+                <button id="saveShiftSettingsBtn">保存設定</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 編輯班別對話框 -->
+    <div id="editShiftDialog" class="dialog hidden">
+        <div class="dialog-header">
+            <h2>編輯班別</h2>
+            <button class="close-dialog">×</button>
+        </div>
+        <div class="dialog-content">
+            <form id="editShiftForm">
+                <div class="form-group">
+                    <label>名稱：</label>
+                    <input type="text" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label>開始時間：</label>
+                    <input type="time" name="startTime" required>
+                </div>
+                <div class="form-group">
+                    <label>結束時間：</label>
+                    <input type="time" name="endTime" required>
+                </div>
+                <div class="form-group">
+                    <label>顏色：</label>
+                    <input type="color" name="color" required>
+                </div>
+                <button type="submit">保存</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="renderer.js"></script>
+</body>
+</html>

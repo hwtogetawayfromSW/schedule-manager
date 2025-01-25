@@ -427,3 +427,416 @@ select:focus {
 .btn-secondary:hover {
     background-color: #6b7280;
 }
+
+/* 全局樣式 */
+:root {
+    --primary-color: #4a90e2;
+    --secondary-color: #f5f5f5;
+    --border-color: #e0e0e0;
+    --text-color: #333;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    margin: 0;
+    padding: 20px;
+    color: var(--text-color);
+}
+
+/* 主要容器 */
+.container {
+    display: grid;
+    grid-template-columns: 250px 1fr;
+    gap: 20px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* 側邊欄 */
+.sidebar {
+    background-color: var(--secondary-color);
+    padding: 20px;
+    border-radius: 8px;
+}
+
+/* 日曆容器 */
+.calendar-container {
+    background-color: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* 日曆網格 */
+#calendar {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 5px;
+    margin-top: 20px;
+}
+
+/* 日曆格子 */
+.calendar-header,
+.calendar-cell {
+    aspect-ratio: 1;
+    padding: 5px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+}
+
+.calendar-header {
+    background-color: var(--primary-color);
+    color: white;
+    font-weight: bold;
+    text-align: center;
+    padding: 10px;
+    aspect-ratio: auto;
+}
+
+.calendar-cell {
+    min-height: 100px;
+    background-color: white;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    position: relative;
+}
+
+.calendar-cell:hover {
+    background-color: var(--secondary-color);
+}
+
+.day-number {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    font-weight: bold;
+}
+
+/* 排班信息 */
+.schedule-container {
+    margin-top: 25px;
+    font-size: 0.8em;
+}
+
+.schedule-item {
+    margin: 2px 0;
+    padding: 2px 4px;
+    border-radius: 3px;
+    background-color: rgba(74, 144, 226, 0.1);
+}
+
+/* 對話框 */
+.dialog {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    max-width: 500px;
+    width: 90%;
+}
+
+.dialog-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+}
+
+.hidden {
+    display: none;
+}
+
+/* 按鈕樣式 */
+.btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.btn-danger {
+    background-color: #dc3545;
+    color: white;
+}
+
+.btn-sm {
+    padding: 4px 8px;
+    font-size: 12px;
+}
+
+/* 表單樣式 */
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+}
+
+/* 員工列表 */
+.employee-list {
+    margin-top: 20px;
+}
+
+.employee-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.employee-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.employee-name {
+    font-weight: bold;
+}
+
+.employee-position {
+    font-size: 0.9em;
+    color: #666;
+}
+
+/* 統計信息 */
+.stats-container {
+    margin-top: 20px;
+}
+
+.stats-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+}
+
+/* 工具欄 */
+.toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.selector-group {
+    display: flex;
+    gap: 10px;
+}
+
+.button-group {
+    display: flex;
+    gap: 10px;
+}
+
+/* 班別設定樣式 */
+.shift-settings {
+    margin-bottom: 20px;
+}
+
+.shift-list {
+    margin-bottom: 15px;
+}
+
+.shift-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    margin-bottom: 10px;
+}
+
+.shift-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.shift-color {
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+}
+
+.shift-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.weekly-settings {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+}
+
+.weekly-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.weekly-cell {
+    border: 1px solid var(--border-color);
+    padding: 10px;
+    border-radius: 4px;
+}
+
+.weekly-cell h5 {
+    margin: 0 0 10px 0;
+    text-align: center;
+}
+
+.shift-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin: 5px 0;
+}
+
+/* 排班項目樣式 */
+.schedule-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 8px;
+    margin: 2px 0;
+    border-radius: 4px;
+    font-size: 0.9em;
+}
+
+/* 為每個班別定義顏色 */
+.schedule-morning {
+    background-color: #e3f2fd;
+    color: #1565c0;
+}
+
+.schedule-afternoon {
+    background-color: #f3e5f5;
+    color: #6a1b9a;
+}
+
+.schedule-evening {
+    background-color: #fff3e0;
+    color: #e65100;
+}
+
+.schedule-rest {
+    background-color: #f5f5f5;
+    color: #616161;
+}
+
+/* 清除和刪除按鈕 */
+.btn-clear,
+.btn-delete {
+    padding: 2px 6px;
+    font-size: 0.8em;
+    color: #dc3545;
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-clear:hover,
+.btn-delete:hover {
+    background-color: rgba(220, 53, 69, 0.1);
+}
+
+/* 非工作日樣式 */
+.non-working-day {
+    background-color: #f8f9fa;
+}
+
+/* 其他月份日期樣式 */
+.other-month {
+    opacity: 0.5;
+}
+
+/* 班次按鈕樣式 */
+.shift-buttons {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 10px;
+    margin: 15px 0;
+}
+
+.shift-button {
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background-color: white;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.shift-button:hover {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+/* 對話框內容樣式 */
+.dialog-content {
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.dialog-header {
+    margin-bottom: 20px;
+}
+
+.dialog-footer {
+    margin-top: 20px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+/* 當前排班列表 */
+.current-schedules {
+    margin: 15px 0;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+    .container {
+        grid-template-columns: 1fr;
+    }
+    
+    .calendar-cell {
+        min-height: 80px;
+    }
+    
+    .shift-buttons {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}

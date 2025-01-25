@@ -1,46 +1,51 @@
 const { app, BrowserWindow } = require('electron');
 const path = require('path');
 
-let mainWindow = null;
-
 function createWindow() {
-    mainWindow = new BrowserWindow({
+    const win = new BrowserWindow({
         width: 1200,
         height: 800,
         webPreferences: {
             nodeIntegration: true,
-            contextIsolation: false,
-            webSecurity: true,
-            enableRemoteModule: true
+            contextIsolation: false
         }
     });
 
-    // 設置 Content Security Policy
-    mainWindow.webContents.session.webRequest.onHeadersReceived((details, callback) => {
+    // 設置更安全的 Content Security Policy
+    win.webContents.session.webRequest.onHeadersReceived((details, callback) => {
         callback({
             responseHeaders: {
                 ...details.responseHeaders,
-                'Content-Security-Policy': ["default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';"]
+                'Content-Security-Policy': [
+                    "default-src 'self';",
+                    "script-src 'self' 'unsafe-inline' 'unsafe-eval';",
+                    "style-src 'self' 'unsafe-inline';",
+                    "img-src 'self' data: https:;",
+                    "connect-src 'self';"
+                ].join(' ')
             }
         });
     });
 
-    mainWindow.loadFile('index.html');
+    // 載入 index.html
+    win.loadFile(path.join(__dirname, 'index.html'));
     
-    // 開發時可以打開開發者工具
-    // mainWindow.webContents.openDevTools();
+    // 開發時打開開發者工具
+    win.webContents.openDevTools();
 }
 
-app.whenReady().then(createWindow);
+app.whenReady().then(() => {
+    createWindow();
+
+    app.on('activate', () => {
+        if (BrowserWindow.getAllWindows().length === 0) {
+            createWindow();
+        }
+    });
+});
 
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {
         app.quit();
-    }
-});
-
-app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
-        createWindow();
     }
 });
