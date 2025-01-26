@@ -2,6 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';">
     <title>排班管理系統</title>
     <link rel="stylesheet" href="styles/main.css">
 </head>
@@ -10,7 +11,7 @@
         <header>
             <h1>排班管理系統</h1>
             <div class="toolbar">
-                <button id="employeeBtn" class="btn">員工管理</button>
+                <button id="employeeSettingsBtn" class="btn">員工管理</button>
                 <button id="shiftSettingsBtn" class="btn">班別設定</button>
                 <button id="exportBtn" class="btn">匯出排班表</button>
             </div>

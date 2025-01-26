@@ -38,6 +38,25 @@ function initializeApp() {
     updateStats();
 }
 
+// 更新統計資料
+function updateStats() {
+    const employeeCount = document.getElementById('employeeCount');
+    const shiftCount = document.getElementById('shiftCount');
+    const scheduleCount = document.getElementById('scheduleCount');
+    
+    if (employeeCount) {
+        employeeCount.textContent = scheduleService.getEmployees().length;
+    }
+    
+    if (shiftCount) {
+        shiftCount.textContent = Object.keys(scheduleService.getShifts()).length;
+    }
+    
+    if (scheduleCount) {
+        scheduleCount.textContent = scheduleService.getAllSchedules().length;
+    }
+}
+
 // 設置年月選擇器
 function setupYearMonthSelectors() {
     const yearSelect = document.getElementById('yearSelect');
@@ -92,7 +111,16 @@ function setupEmployeeManager() {
     function renderEmployeeList() {
         console.log('Rendering employee list...');
         const employeeList = document.getElementById('employeeList');
+        if (!employeeList) {
+            console.error('Employee list element not found');
+            return;
+        }
+        
         const employees = scheduleService.getEmployees();
+        if (employees.length === 0) {
+            employeeList.innerHTML = '<p>尚無員工資料</p>';
+            return;
+        }
         
         employeeList.innerHTML = employees.map(employee => `
             <div class="employee-item">
@@ -101,8 +129,8 @@ function setupEmployeeManager() {
                     <span>${employee.position}</span>
                 </div>
                 <div class="employee-actions">
-                    <button onclick="editEmployee('${employee.id}')" class="btn btn-small">編輯</button>
-                    <button onclick="deleteEmployee('${employee.id}')" class="btn btn-small btn-danger">刪除</button>
+                    <button onclick="window.editEmployee('${employee.id}')" class="btn btn-small">編輯</button>
+                    <button onclick="window.deleteEmployee('${employee.id}')" class="btn btn-small btn-danger">刪除</button>
                 </div>
             </div>
         `).join('');
@@ -112,6 +140,7 @@ function setupEmployeeManager() {
     const employeeSettingsBtn = document.getElementById('employeeSettingsBtn');
     if (employeeSettingsBtn) {
         employeeSettingsBtn.addEventListener('click', () => {
+            console.log('Employee settings button clicked');
             const dialog = document.getElementById('employeeDialog');
             if (dialog) {
                 renderEmployeeList();
@@ -120,12 +149,15 @@ function setupEmployeeManager() {
                 console.error('Employee dialog not found');
             }
         });
+    } else {
+        console.error('Employee settings button not found');
     }
     
     // 設置新增員工按鈕事件
     const addEmployeeBtn = document.getElementById('addEmployeeBtn');
     if (addEmployeeBtn) {
         addEmployeeBtn.addEventListener('click', () => {
+            console.log('Add employee button clicked');
             const form = document.getElementById('employeeForm');
             if (form) {
                 form.reset();
@@ -144,6 +176,7 @@ function setupEmployeeManager() {
     if (employeeForm) {
         employeeForm.addEventListener('submit', (e) => {
             e.preventDefault();
+            console.log('Employee form submitted');
             
             const formData = new FormData(employeeForm);
             const employee = {
@@ -162,35 +195,45 @@ function setupEmployeeManager() {
                 scheduleService.addEmployee(employee);
             }
             
-            employeeForm.reset();
             renderEmployeeList();
-            dialogService.closeDialog(employeeDialog);
+            updateStats();
             calendarService.renderCalendar();
+            
+            // 關閉對話框
+            const dialog = document.getElementById('employeeDialog');
+            if (dialog) {
+                dialogService.closeDialog(dialog);
+            }
         });
     }
     
     // 定義全局編輯員工函數
     window.editEmployee = (employeeId) => {
+        console.log('Editing employee:', employeeId);
         const employee = scheduleService.getEmployeeById(employeeId);
         if (employee) {
             const form = document.getElementById('employeeForm');
-            form.elements['employeeId'].value = employee.id;
-            form.elements['name'].value = employee.name;
-            form.elements['position'].value = employee.position;
-            form.elements['hourlyRate'].value = employee.hourlyRate;
-            
-            const formTitle = document.querySelector('#employeeDialog h2');
-            if (formTitle) {
-                formTitle.textContent = '編輯員工';
+            if (form) {
+                form.elements['employeeId'].value = employee.id;
+                form.elements['name'].value = employee.name;
+                form.elements['position'].value = employee.position;
+                form.elements['hourlyRate'].value = employee.hourlyRate;
+                
+                const formTitle = document.querySelector('#employeeDialog h2');
+                if (formTitle) {
+                    formTitle.textContent = '編輯員工';
+                }
             }
         }
     };
     
     // 定義全局刪除員工函數
     window.deleteEmployee = (employeeId) => {
+        console.log('Deleting employee:', employeeId);
         if (confirm('確定要刪除這個員工嗎？')) {
             scheduleService.removeEmployee(employeeId);
             renderEmployeeList();
+            updateStats();
             calendarService.renderCalendar();
         }
     };
@@ -413,29 +456,93 @@ function setupShiftManager() {
     console.log('Shift manager setup complete');
 }
 
-// 更新統計資料
-function updateStats() {
-    const employeeCount = document.getElementById('employeeCount');
-    const shiftCount = document.getElementById('shiftCount');
-    const scheduleCount = document.getElementById('scheduleCount');
-    
-    if (employeeCount) {
-        employeeCount.textContent = scheduleService.getEmployees().length;
-    }
-    
-    if (shiftCount) {
-        shiftCount.textContent = Object.keys(scheduleService.getShifts()).length;
-    }
-    
-    if (scheduleCount) {
-        scheduleCount.textContent = '0'; // TODO: 實現排班計數
-    }
-}
-
 // 設置排班管理
 function setupScheduleManager() {
     console.log('Setting up schedule manager...');
-    // TODO: 實現排班管理功能
+    
+    // 設置排班表單提交事件
+    const scheduleForm = document.getElementById('scheduleForm');
+    if (scheduleForm) {
+        scheduleForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(scheduleForm);
+            const schedule = {
+                date: formData.get('date'),
+                employeeId: formData.get('employeeId'),
+                shiftName: formData.get('shiftName')
+            };
+            
+            // 檢查必要欄位
+            if (!schedule.employeeId || !schedule.shiftName) {
+                alert('請選擇員工和班別');
+                return;
+            }
+            
+            // 添加新排班
+            scheduleService.addSchedule(schedule);
+            
+            // 更新界面
+            calendarService.updateScheduleList(schedule.date);
+            calendarService.renderCalendar();
+            
+            // 重置表單
+            scheduleForm.reset();
+            scheduleForm.elements['date'].value = schedule.date; // 保留日期
+        });
+    }
+    
+    // 定義全局刪除排班函數
+    window.deleteSchedule = (date, scheduleId) => {
+        if (confirm('確定要刪除這個排班嗎？')) {
+            scheduleService.removeSchedule(date, scheduleId);
+            calendarService.updateScheduleList(date);
+            calendarService.renderCalendar();
+        }
+    };
+    
+    // 更新員工和班別選項
+    function updateScheduleOptions() {
+        const employeeSelect = document.getElementById('employeeId');
+        const shiftSelect = document.getElementById('shiftName');
+        
+        if (employeeSelect) {
+            const employees = scheduleService.getEmployees();
+            employeeSelect.innerHTML = `
+                <option value="">請選擇員工</option>
+                ${employees.map(employee => `
+                    <option value="${employee.id}">${employee.name}</option>
+                `).join('')}
+            `;
+        }
+        
+        if (shiftSelect) {
+            const shifts = scheduleService.getShifts();
+            shiftSelect.innerHTML = `
+                <option value="">請選擇班別</option>
+                ${Object.entries(shifts).map(([name, shift]) => `
+                    <option value="${name}">${name}</option>
+                `).join('')}
+            `;
+        }
+    }
+    
+    // 監聽對話框開啟事件
+    const scheduleDialog = document.getElementById('scheduleDialog');
+    if (scheduleDialog) {
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+                    const isVisible = scheduleDialog.style.display !== 'none';
+                    if (isVisible) {
+                        updateScheduleOptions();
+                    }
+                }
+            });
+        });
+        
+        observer.observe(scheduleDialog, { attributes: true });
+    }
 }
 
 // 處理排班點擊事件
@@ -447,8 +554,9 @@ calendarService.handleScheduleClick = function(cell, date) {
     const currentSchedules = document.getElementById('currentSchedules');
     const shiftButtons = document.querySelector('.shift-buttons');
     
-    // 設置日期顯示
-    selectedDateSpan.textContent = date;
+    // 確保 date 是正確的 ISO 格式
+    const formattedDate = new Date(date).toISOString().split('T')[0];
+    selectedDateSpan.textContent = formattedDate;
     
     // 填充員工選擇器
     const employees = scheduleService.getEmployees();
@@ -582,32 +690,6 @@ function updateCalendar() {
     }
     
     calendarBody.innerHTML = html;
-}
-
-// 統計功能
-function updateStats() {
-    try {
-        const totalEmployees = document.getElementById('totalEmployees');
-        const totalShifts = document.getElementById('totalShifts');
-        const totalSchedules = document.getElementById('totalSchedules');
-        
-        if (!totalEmployees || !totalShifts || !totalSchedules) {
-            console.error('統計元素未找到');
-            return;
-        }
-        
-        const stats = {
-            employees: scheduleService.getEmployees().length,
-            shifts: Object.keys(scheduleService.getShifts()).length,
-            schedules: Object.values(scheduleService.schedules || {}).reduce((total, daySchedules) => total + (daySchedules?.length || 0), 0)
-        };
-        
-        totalEmployees.textContent = stats.employees;
-        totalShifts.textContent = stats.shifts;
-        totalSchedules.textContent = stats.schedules;
-    } catch (error) {
-        console.error('更新統計資料失敗:', error);
-    }
 }
 
 // 全局函數定義

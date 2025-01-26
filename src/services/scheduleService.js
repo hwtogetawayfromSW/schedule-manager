@@ -122,17 +122,26 @@ class ScheduleService {
     }
 
     // 排班相關方法
-    addSchedule(date, schedule) {
+    addSchedule(schedule) {
+        const { date, employeeId, shiftName } = schedule;
         if (!this.schedules[date]) {
             this.schedules[date] = [];
         }
+        
         // 檢查是否已存在相同員工在同一天的排班
-        const existingSchedule = this.schedules[date].find(s => s.employeeId === schedule.employeeId);
+        const existingSchedule = this.schedules[date].find(s => s.employeeId === employeeId);
         if (existingSchedule) {
             throw new Error('該員工在此日期已有排班');
         }
-        this.schedules[date].push(schedule);
+        
+        // 添加新排班
+        const newSchedule = {
+            ...schedule,
+            id: Date.now().toString()
+        };
+        this.schedules[date].push(newSchedule);
         this.saveData();
+        return newSchedule;
     }
 
     removeSchedule(date, scheduleId) {
@@ -146,18 +155,11 @@ class ScheduleService {
     }
 
     getDaySchedules(date) {
-        const schedules = this.schedules[date] || [];
-        const defaultSchedules = this.getDefaultSchedules(date);
-        
-        // 合併實際排班和預設班別
-        return [
-            ...schedules,
-            ...defaultSchedules.map(shiftName => ({
-                id: `default-${shiftName}`,
-                shiftName,
-                isDefault: true
-            }))
-        ];
+        return this.schedules[date] || [];
+    }
+
+    getAllSchedules() {
+        return Object.values(this.schedules).flat();
     }
 
     // 獲取指定日期的預設班別
