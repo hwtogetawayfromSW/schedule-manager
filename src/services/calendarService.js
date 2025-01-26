@@ -11,7 +11,6 @@ class CalendarService {
         const calendarBody = document.getElementById('calendarBody');
         if (!calendarBody) return;
 
-        // 清空日曆
         calendarBody.innerHTML = '';
         
         const firstDay = new Date(this.currentYear, this.currentMonth - 1, 1);
@@ -21,21 +20,23 @@ class CalendarService {
         
         let date = 1;
         
-        // 創建日曆網格
         for (let i = 0; i < 6; i++) {
             const row = document.createElement('tr');
             
             for (let j = 0; j < 7; j++) {
                 const cell = document.createElement('td');
+                cell.className = 'calendar-cell';
                 
                 if (i === 0 && j < startingDay) {
-                    // 填充上個月的空白日期
-                    cell.textContent = '';
+                    cell.classList.add('empty');
                 } else if (date > totalDays) {
-                    // 填充下個月的空白日期
-                    cell.textContent = '';
+                    cell.classList.add('empty');
                 } else {
-                    // 填充當前月份的日期
+                    // Format the date string properly
+                    const currentDate = new Date(this.currentYear, this.currentMonth - 1, date);
+                    const dateStr = this.formatDate(currentDate);
+                    cell.dataset.date = dateStr;
+                    
                     const dateDiv = document.createElement('div');
                     dateDiv.className = 'calendar-date';
                     dateDiv.textContent = date;
@@ -43,35 +44,9 @@ class CalendarService {
                     const schedulesDiv = document.createElement('div');
                     schedulesDiv.className = 'calendar-schedules';
                     
-                    // 確保使用正確的當前日期
-                    const currentDate = new Date(this.currentYear, this.currentMonth, date);
-                    const dateStr = currentDate.toISOString().split('T')[0];
-                    cell.dataset.date = dateStr;
-                    
-                    // 獲取當天的預設班別
-                    const dayOfWeek = currentDate.getDay();
-                    const weekDays = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-                    const defaultShifts = scheduleService.getWeeklyDefaults()[weekDays[dayOfWeek]] || [];
-                    
-                    // 獲取當天的實際排班
+                    // Get schedules for the current date
                     const schedules = scheduleService.getDaySchedules(dateStr);
                     
-                    // 如果沒有實際排班，顯示預設班別
-                    if (schedules.length === 0) {
-                        defaultShifts.forEach(shiftName => {
-                            const shift = scheduleService.getShiftByName(shiftName);
-                            if (shift) {
-                                const shiftDiv = document.createElement('div');
-                                shiftDiv.className = 'schedule-item default-shift';
-                                shiftDiv.style.backgroundColor = shift.color;
-                                shiftDiv.style.color = this.getContrastColor(shift.color);
-                                shiftDiv.textContent = shiftName;
-                                schedulesDiv.appendChild(shiftDiv);
-                            }
-                        });
-                    }
-                    
-                    // 顯示實際排班
                     schedules.forEach(schedule => {
                         const shift = scheduleService.getShiftByName(schedule.shiftName);
                         if (shift) {
@@ -90,7 +65,7 @@ class CalendarService {
                     cell.appendChild(dateDiv);
                     cell.appendChild(schedulesDiv);
                     
-                    // 添加點擊事件
+                    // Add click event
                     cell.addEventListener('click', () => {
                         this.handleDateClick(dateStr);
                     });
@@ -110,29 +85,35 @@ class CalendarService {
         const dialog = document.getElementById('scheduleDialog');
         if (!dialog) return;
         
-        // 更新對話框標題
+        // Parse the date string to ensure correct format
+        const date = new Date(dateStr);
+        const formattedDate = this.formatDate(date);
+        
+        // Update dialog title with correct date
         const title = dialog.querySelector('h2');
         if (title) {
-            const date = new Date(dateStr);
-            const year = date.getFullYear();
-            const month = date.getMonth() + 1;
-            const day = date.getDate();
-            title.textContent = `排班 - ${year}/${month}/${day}`;
+            title.textContent = `排班 - ${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`;
         }
         
-        // 設置新增排班的日期
+        // Set the date input with correct format
         const dateInput = dialog.querySelector('input[name="date"]');
         if (dateInput) {
-            dateInput.value = dateStr;
+            dateInput.value = formattedDate;
         }
         
-        // 更新排班列表
-        this.updateScheduleList(dateStr);
+        // Update schedule list with correct date
+        this.updateScheduleList(formattedDate);
         
-        // 打開對話框
         dialogService.openDialog(dialog);
     }
-    
+
+    formatDate(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
     updateScheduleList(dateStr) {
         const scheduleList = document.getElementById('scheduleList');
         if (!scheduleList) return;
